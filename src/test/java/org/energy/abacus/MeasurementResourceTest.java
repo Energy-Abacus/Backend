@@ -10,12 +10,17 @@ import static org.hamcrest.CoreMatchers.is;
 public class MeasurementResourceTest {
 
     @Test
-    public void testHelloEndpoint() {
-        given()
-          .when().get("/hello")
-          .then()
-             .statusCode(200)
-             .body(is("Hello from RESTEasy Reactive"));
-    }
+    public void testNewMeasurement(){
+        given().body("{\"power\": 20}")
+                .header("Content-Type", "application/json")
+                .when()
+                .post("api/v1/Measurements")
+                .then();
 
+        given().when()
+                .get("api/v1/Measurements")
+                .then()
+                .body("$.size()", is(1),
+                        "[0].power", is(20.0F));
+    }
 }
