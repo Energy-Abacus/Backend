@@ -1,9 +1,9 @@
 name: Build
 on:
-  pull_request:
-    types: [opened, edited, reopened, synchronize]
-    branches:
-      - '**'
+  #pull_request:
+  #  types: [opened, edited, reopened, synchronize]
+  #  branches:
+  #    - '**'
   push:
     branches:
       - '**'
