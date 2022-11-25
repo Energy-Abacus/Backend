@@ -20,7 +20,6 @@ public class OutletResource {
     @POST
     @Transactional
     public void save(final Outlet outlet) {
-        //System.out.println(outlet.isOn());
         outlet.persist();
     }
 

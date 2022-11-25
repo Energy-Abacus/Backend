@@ -18,6 +18,5 @@ import java.util.UUID;
 public class Outlet extends PanacheEntity {
 
     private String name;
-    //private boolean valid;
     private boolean powerOn;
 }
