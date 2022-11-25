@@ -1,8 +1,12 @@
 name: Build
 on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+    branches:
+      - '**'
   push:
     branches:
-      - master # or the name of your main branch
+      - '**'
 
 jobs:
   build:
