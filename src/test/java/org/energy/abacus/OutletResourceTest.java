@@ -24,7 +24,7 @@ public class OutletResourceTest{
         given().when()
                 .get("/api/v1/Outlets")
                 .then()
-                .body("$.size()", is (1),
+                .body("$.size()", is(1),
                         "[0].name", is("Outlet1"));
     }
 }
