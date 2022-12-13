@@ -86,5 +86,6 @@ jobs:
           export PATH=$PATH:$(realpath kubelogin)
           mkdir ~/.kube
           echo "$KUBE_CONFIG" >> ~/.kube/config
-          kubectl get pods
+          cat ~/.kube/config
+          #kubectl get pods
           #kubectl apply -f target/kubernetes/kubernetes.yml
