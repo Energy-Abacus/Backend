@@ -73,6 +73,7 @@ jobs:
       - name: Install kubectl
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install -y apt-transport-https
@@ -85,7 +86,6 @@ jobs:
           mv kubelogin/kubelogin kubelogin/kubectl-oidc_login
           export PATH=$PATH:$(realpath kubelogin)
           mkdir ~/.kube
-          echo "$KUBE_CONFIG" >> ~/.kube/config
-          cat ~/.kube/config
-          #kubectl get pods
+          echo "$KUBE_CONFIG" > ~/.kube/config
+          kubectl get pods
           #kubectl apply -f target/kubernetes/kubernetes.yml
