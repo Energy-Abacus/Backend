@@ -85,5 +85,6 @@ jobs:
           mkdir ~/.kube
           echo "${{ secrets.KUBE_CONFIG }}" >> ~/.kube/config
           echo $PATH
-          kubectl get pods
+          cat ~/.kube/config
+          kubectl oidc-login
           #kubectl apply -f target/kubernetes/kubernetes.yml
