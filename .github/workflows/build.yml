@@ -68,7 +68,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker Image
-        run: mvn install
+        run: mvn install -Dquarkus.container-image.push=true
 
       - name: Install kubectl
         run: |
@@ -84,4 +84,6 @@ jobs:
           export PATH=$PATH:$(realpath kubelogin)
           mkdir ~/.kube
           echo "${{ secrets.KUBE_CONFIG }}" >> ~/.kube/config
-          kubectl apply -f target/kubernetes/kubernetes.yml
+          echo $PATH
+          kubectl get pods
+          #kubectl apply -f target/kubernetes/kubernetes.yml
