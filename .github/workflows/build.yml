@@ -81,11 +81,10 @@ jobs:
           echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
           sudo apt-get update
           sudo apt-get install -y kubectl unzip
-          curl -fsSLO https://github.com/int128/kubelogin/releases/download/v1.25.4/kubelogin_darwin_amd64.zip
+          curl -fsSLO https://github.com/int128/kubelogin/releases/download/v1.25.4/kubelogin_linux_amd64.zip
           unzip kubelogin_darwin_amd64.zip kubelogin -d kubelogin
           mv kubelogin/kubelogin kubelogin/kubectl-oidc_login
           export PATH=$PATH:$(realpath kubelogin)
           mkdir ~/.kube
           echo "$KUBE_CONFIG" > ~/.kube/config
-          kubectl get pods
-          #kubectl apply -f target/kubernetes/kubernetes.yml
+          kubectl apply -f target/kubernetes/kubernetes.yml
