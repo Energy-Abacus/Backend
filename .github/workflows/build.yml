@@ -68,10 +68,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker Image
-        run: |
-          mvn quarkus:build
-          cp src/main/resources/application.properties target/classes/.
-          mvn quarkus:build
+        run: mvn install
 
       - name: Install kubectl
         run: |
