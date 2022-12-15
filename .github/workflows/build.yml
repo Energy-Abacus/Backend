@@ -70,7 +70,9 @@ jobs:
       - name: Build Docker Image
         run: mvn install -Dquarkus.container-image.push=true
 
-      - name: Install kubectl and kubelogin
+      - name: Install kubectl
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         shell: bash
         run: |
           sudo apt-get update
@@ -83,15 +85,6 @@ jobs:
           unzip kubelogin_linux_amd64.zip kubelogin -d kubelogin
           mv kubelogin/kubelogin kubelogin/kubectl-oidc_login
           export PATH=$PATH:$(realpath kubelogin)
-
-      - name: Install kubernetes config
-        shell: bash
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-        run: |
           mkdir ~/.kube
           echo "$KUBE_CONFIG" > ~/.kube/config
-
-      - name: Deploy project to kubernetes
-        shell: bash
-        run: kubectl apply -f target/kubernetes/kubernetes.yml
+          kubectl apply -f target/kubernetes/kubernetes.yml
