@@ -1,8 +1,4 @@
-package org.energy.abacus;
-
-import io.smallrye.common.constraint.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+package org.energy.abacus.Outlets;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.transaction.Transactional;

@@ -1,7 +1,4 @@
-package org.energy.abacus;
-
-import lombok.Getter;
-import lombok.Setter;
+package org.energy.abacus.Measurements;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.transaction.Transactional;
