@@ -1,4 +1,6 @@
-package org.energy.abacus.Measurements;
+package org.energy.abacus.ressource;
+
+import org.energy.abacus.entities.Measurement;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.transaction.Transactional;
@@ -15,8 +17,12 @@ public class MeasurementResource{
 
     @POST
     @Transactional
-    public void save(final Measurement measurement){measurement.persist();}
+    public void save(final Measurement measurement) {
+        measurement.persist();
+    }
 
     @GET
-    public Collection<Measurement> getAllMeasurements() {return Measurement.listAll();}
+    public Collection<Measurement> getAllMeasurements() {
+        return Measurement.listAll();
+    }
 }

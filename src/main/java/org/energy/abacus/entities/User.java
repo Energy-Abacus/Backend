@@ -1,15 +1,11 @@
-package org.energy.abacus.User;
+package org.energy.abacus.entities;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import lombok.Generated;
 import lombok.Getter;
 import lombok.Setter;
-import org.energy.abacus.Outlets.Outlet;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 
