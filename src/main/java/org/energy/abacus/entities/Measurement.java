@@ -31,8 +31,11 @@ public class Measurement extends PanacheEntityBase {
     @Column(nullable = false)
     private double temperature;
 
+    //@Column(name = "outletId", insertable = false, updatable = false)
+    //private UUID outletId;
+
     //Relations
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fk_outlet_id")
+    @JoinColumn(name = "outletId")
     private Outlet outlet;
 }
