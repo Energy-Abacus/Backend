@@ -20,7 +20,16 @@ public class Measurement extends PanacheEntityBase {
     private UUID id;
 
     @Column(nullable = false)
-    private double power;
+    private boolean status;
+
+    @Column(nullable = false)
+    private double wattPower;
+
+    @Column(nullable = false)
+    private double wattMinutePower;
+
+    @Column(nullable = false)
+    private double temperature;
 
     //Relations
     @ManyToOne(fetch = FetchType.LAZY)
