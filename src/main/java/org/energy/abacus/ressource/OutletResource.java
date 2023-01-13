@@ -1,4 +1,6 @@
-package org.energy.abacus.Outlets;
+package org.energy.abacus.ressource;
+
+import org.energy.abacus.entities.Outlet;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.transaction.Transactional;

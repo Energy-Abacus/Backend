@@ -11,7 +11,7 @@ public class MeasurementResourceTest {
 
     @Test
     public void testNewMeasurement(){
-        given().body("{\"power\": 20}")
+        given().body("{\"temperature\": 20}")
                 .header("Content-Type", "application/json")
                 .when()
                 .post("api/v1/Measurements")
@@ -21,6 +21,6 @@ public class MeasurementResourceTest {
                 .get("api/v1/Measurements")
                 .then()
                 .body("$.size()", is(1),
-                        "[0].power", is(20.0F));
+                        "[0].temperature", is(20.0F));
     }
 }

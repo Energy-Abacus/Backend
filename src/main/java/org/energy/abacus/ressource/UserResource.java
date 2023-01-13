@@ -1,9 +1,8 @@
-package org.energy.abacus.User;
+package org.energy.abacus.ressource;
 
-import org.energy.abacus.Outlets.Outlet;
+import org.energy.abacus.entities.User;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.print.attribute.standard.Media;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;

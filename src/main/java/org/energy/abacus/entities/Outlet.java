@@ -1,12 +1,8 @@
-package org.energy.abacus.Outlets;
+package org.energy.abacus.entities;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import io.smallrye.common.constraint.NotNull;
-import lombok.Generated;
 import lombok.Getter;
 import lombok.Setter;
-import org.energy.abacus.Measurements.Measurement;
-import org.energy.abacus.User.User;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.*;

@@ -1,10 +1,8 @@
-package org.energy.abacus.Measurements;
+package org.energy.abacus.entities;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import lombok.Generated;
 import lombok.Getter;
 import lombok.Setter;
-import org.energy.abacus.Outlets.Outlet;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.*;
@@ -22,10 +20,22 @@ public class Measurement extends PanacheEntityBase {
     private UUID id;
 
     @Column(nullable = false)
-    private double power;
+    private boolean status;
+
+    @Column(nullable = false)
+    private double wattPower;
+
+    @Column(nullable = false)
+    private double wattMinutePower;
+
+    @Column(nullable = false)
+    private double temperature;
+
+    //@Column(name = "outletId", insertable = false, updatable = false)
+    //private UUID outletId;
 
     //Relations
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fk_outlet_id")
+    @JoinColumn(name = "outletId")
     private Outlet outlet;
 }
