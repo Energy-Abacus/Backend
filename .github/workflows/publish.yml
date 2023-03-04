@@ -36,17 +36,14 @@ jobs:
 
       - name: Build Docker Image
         env:
-          url-prefix: ${{ github.ref_name }}
+          URL_PREFIX: ${{ github.ref_name }}
         run: mvn install -Dquarkus.container-image.push=true
 
       - name: Install kubectl
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-          URL_PREFIX: ${{ github.ref_name }}
         shell: bash
         run: |
-          echo "branch env: "
-          echo -n "$URL_PREFIX"
           sudo apt-get update
           sudo apt-get install -y apt-transport-https
           curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
