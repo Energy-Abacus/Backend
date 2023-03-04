@@ -2,7 +2,7 @@ name: Build
 on:
   push:
     branches:
-      - main
+      - '**'
 
 jobs:
   publish:
@@ -35,6 +35,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker Image
+        env:
+          url-prefix: ${{ github.ref_name }}
         run: mvn install -Dquarkus.container-image.push=true
 
       - name: Install kubectl
