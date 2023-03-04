@@ -42,8 +42,11 @@ jobs:
       - name: Install kubectl
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+          url-prefix: ${{ github.ref_name }}
         shell: bash
         run: |
+          echo "branch env: "
+          echo -n "$url-prefix"
           sudo apt-get update
           sudo apt-get install -y apt-transport-https
           curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
