@@ -1,6 +1,6 @@
 name: Delete from Kubernetes
 on:
-  push:
+  delete:
     branches:
       - '**'
 
