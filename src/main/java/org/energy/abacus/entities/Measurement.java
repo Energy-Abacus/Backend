@@ -1,26 +1,32 @@
 package org.energy.abacus.entities;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.*;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.*;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
-@ApplicationScoped
-public class Measurement extends PanacheEntityBase {
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@NamedQueries({
+        @NamedQuery(name = "findMeasurementsByOutlet", query = "SELECT m FROM Measurement m WHERE m.outletId = :outletId"),
+})
+public class Measurement {
 
     //Fields
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
 
     @Column(nullable = false)
-    private boolean status;
+    private LocalDateTime timeStamp;
+
+    @Column(nullable = false)
+    private boolean powerOn;
 
     @Column(nullable = false)
     private double wattPower;
@@ -31,11 +37,12 @@ public class Measurement extends PanacheEntityBase {
     @Column(nullable = false)
     private double temperature;
 
-    //@Column(name = "outletId", insertable = false, updatable = false)
-    //private UUID outletId;
+    @Column(name = "outletId", insertable = false, updatable = false)
+    private int outletId;
 
     //Relations
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "outletId")
+    @JsonIgnore
     private Outlet outlet;
 }
