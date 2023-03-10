@@ -27,7 +27,7 @@ public class Hub {
 
     private String postToken;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String userid;
 
     @OneToMany(

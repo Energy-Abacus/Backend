@@ -23,7 +23,7 @@ import java.util.Collection;
 
 @Path("/api/v1/measurements")
 @RequestScoped
-public class MeasurementResource{
+public class MeasurementResource {
 
     @Inject
     MeasurementService measurementService;

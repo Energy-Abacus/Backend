@@ -36,10 +36,10 @@ public class MeasurementService {
 
         Measurement measurementEntity = Measurement.builder()
                 .timeStamp(LocalDateTime.parse(measurementDto.getTimeStamp(), dateFormatter))
-                .powerOn(measurementDto.isPowerOn())
-                .wattPower(measurementDto.getWattPower())
-                .wattMinutePower(measurementDto.getWattMinutePower())
-                .temperature(measurementDto.getTemperature())
+                .powerOn(measurementDto.getPowerOn().equals("on"))
+                .wattPower(Double.parseDouble(measurementDto.getWattPower()))
+                .wattMinutePower(Double.parseDouble(measurementDto.getWattMinutePower()))
+                .temperature(Double.parseDouble(measurementDto.getTemperature()))
                 .outlet(getOutlet(measurementDto.getOutletIdentifier(), hub.getId()))
                 .build();
         entityManager.persist(measurementEntity);
