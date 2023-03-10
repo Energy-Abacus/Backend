@@ -1,16 +1,22 @@
 package org.energy.abacus.logic;
 
 import lombok.extern.java.Log;
+import org.energy.abacus.dtos.HubDto;
 import org.energy.abacus.dtos.MeasurementDto;
-import org.energy.abacus.dtos.OutletDTO;
+import org.energy.abacus.dtos.OutletDto;
+import org.energy.abacus.entities.Hub;
 import org.energy.abacus.entities.Measurement;
 import org.energy.abacus.entities.Outlet;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.ws.rs.NotAllowedException;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
+import java.util.Collection;
 import java.util.List;
 
 @ApplicationScoped
@@ -20,45 +26,97 @@ public class MeasurementService {
     @Inject
     EntityManager entityManager;
 
-    public void addNewMeasurement(final MeasurementDto measurementDto, String userId) {
+    public void addNewMeasurement(final MeasurementDto measurementDto) {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        Hub hub = getHubByToken(measurementDto.getPostToken());
+
+        if (hub == null) {
+            throw new NotAllowedException("Wrong token!");
+        }
+
         Measurement measurementEntity = Measurement.builder()
                 .timeStamp(LocalDateTime.parse(measurementDto.getTimeStamp(), dateFormatter))
                 .powerOn(measurementDto.isPowerOn())
                 .wattPower(measurementDto.getWattPower())
                 .wattMinutePower(measurementDto.getWattMinutePower())
                 .temperature(measurementDto.getTemperature())
-                .outlet(getOutlet(measurementDto.getOutletIdentifier(), userId))
+                .outlet(getOutlet(measurementDto.getOutletIdentifier(), hub.getId()))
                 .build();
         entityManager.persist(measurementEntity);
     }
 
-    public int addNewOutlet(final OutletDTO outletDTO, String userId) {
+    public int addNewOutlet(final OutletDto outletDTO, String userId) {
+        Hub hub = getHubById(outletDTO.getHubId(), userId);
         Outlet outletEntity = Outlet.builder()
                 .name(outletDTO.getName())
-                .userid(userId)
                 .outletIdentifier(outletDTO.getOutletIdentifier())
+                .hub(hub)
                 .build();
         entityManager.persist(outletEntity);
         return outletEntity.getId();
     }
 
-    public Outlet getOutlet(String outletIdentifier, String userId) {
+    public Hub addNewHub(final HubDto hubDto, String userId) {
+        Hub hubEntity = Hub.builder()
+                .name(hubDto.getName())
+                .postToken(generateToken())
+                .userid(userId)
+                .build();
+        entityManager.persist(hubEntity);
+        return hubEntity;
+    }
+
+    public Hub getHubByToken(String postToken) {
+        List<Hub> hubs = entityManager.createNamedQuery("findHubByToken", Hub.class)
+                .setParameter("token", postToken)
+                .getResultList();
+
+        return hubs.isEmpty() ? null : hubs.get(0);
+    }
+
+    public Hub getHubById(int id, String userId) {
+        Hub hub = entityManager.createNamedQuery("findHubById", Hub.class)
+                .setParameter("id", id)
+                .getSingleResult();
+
+        if (!hub.getUserid().equals(userId)) {
+            throw new NotAllowedException("Hub does not belong to user");
+        }
+        return hub;
+    }
+
+    public List<Hub> getAllHubsForUser(String userId) {
+        return entityManager.createNamedQuery("findHubsByUserId", Hub.class)
+                .setParameter("userId", userId)
+                .getResultList();
+    }
+
+    public Outlet getOutlet(String outletIdentifier, int hubId) {
         return entityManager.createNamedQuery("findOutletByIdentifier", Outlet.class)
                 .setParameter("outletIdentifier", outletIdentifier)
-                .setParameter("userId", userId)
+                .setParameter("hubId", hubId)
                 .getSingleResult();
     }
 
-    public List<Outlet> getAllOutletsForUser(String userId) {
-        return entityManager.createNamedQuery("findOutletsByUser", Outlet.class)
+    public Collection<Outlet> getAllOutletsForHub(int hubId, String userId) {
+        Hub hub = getHubById(hubId, userId);
+        return hub.getOutlets();
+        /*return entityManager.createNamedQuery("findOutletsByHubId", Outlet.class)
+                .setParameter("hubId", hubId)
+                .getResultList();*/
+    }
+
+    public List<Measurement> getMeasurementsByOutlet(int outletId, String userId) {
+        return entityManager.createNamedQuery("findMeasurementsByOutlet", Measurement.class)
+                .setParameter("outletId", outletId)
                 .setParameter("userId", userId)
                 .getResultList();
     }
 
-    public List<Measurement> getMeasurementsByOutlet(int outletId) {
-        return entityManager.createNamedQuery("findMeasurementsByOutlet", Measurement.class)
-                .setParameter("outletId", outletId)
-                .getResultList();
+    public String generateToken() {
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] token = new byte[32];
+        secureRandom.nextBytes(token);
+        return Base64.getEncoder().encodeToString(token);
     }
 }

@@ -16,4 +16,6 @@ public class MeasurementDto {
     private double temperature;
 
     private String outletIdentifier;
+
+    private String postToken;
 }

@@ -25,13 +25,13 @@ jobs:
         with:
           owner: energy-abacus
           name: backend
-          tag: ${{ github.ref_name }}
+          tag: ${{ github.event.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Remove kubernetes objects
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-          URL_PREFIX: ${{ github.ref_name }}
+          URL_PREFIX: ${{ github.event.ref }}
         shell: bash
         run: |
           sudo apt-get update

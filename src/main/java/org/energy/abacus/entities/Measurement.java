@@ -13,7 +13,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @NamedQueries({
-        @NamedQuery(name = "findMeasurementsByOutlet", query = "SELECT m FROM Measurement m WHERE m.outletId = :outletId"),
+        @NamedQuery(name = "findMeasurementsByOutlet", query = "SELECT m FROM Measurement m " +
+                "WHERE m.outletId = :outletId " +
+                "AND m.outlet.hub.userid = :userId"),
 })
 public class Measurement {
 
