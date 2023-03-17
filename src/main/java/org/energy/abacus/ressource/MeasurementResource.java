@@ -4,7 +4,6 @@ import io.quarkus.security.Authenticated;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
-import org.energy.abacus.dtos.GetMeasurementDto;
 import org.energy.abacus.dtos.HubDto;
 import org.energy.abacus.dtos.MeasurementDto;
 import org.energy.abacus.dtos.OutletDto;
@@ -19,7 +18,6 @@ import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.Collection;
-import java.util.logging.Level;
 
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -44,8 +42,12 @@ public class MeasurementResource {
 
     @GET
     @Authenticated
-    public Collection<Measurement> getMeasurementsByOutletId(GetMeasurementDto getMeasurementDto) {
-        return measurementService.getMeasurementsByOutletInTimeFrame(getMeasurementDto, userId);
+    public Collection<Measurement> getMeasurementsByOutletId(
+            @QueryParam("outletId") int outletId,
+            @QueryParam("from") String from,
+            @QueryParam("to") String to
+    ) {
+        return measurementService.getMeasurementsByOutletInTimeFrame(outletId, from, to, userId);
     }
 
     @POST

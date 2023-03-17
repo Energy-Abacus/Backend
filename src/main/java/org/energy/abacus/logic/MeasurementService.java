@@ -1,14 +1,12 @@
 package org.energy.abacus.logic;
 
 import lombok.extern.java.Log;
-import org.energy.abacus.dtos.GetMeasurementDto;
 import org.energy.abacus.dtos.HubDto;
 import org.energy.abacus.dtos.MeasurementDto;
 import org.energy.abacus.dtos.OutletDto;
 import org.energy.abacus.entities.Hub;
 import org.energy.abacus.entities.Measurement;
 import org.energy.abacus.entities.Outlet;
-import org.jboss.logmanager.Level;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -110,12 +108,12 @@ public class MeasurementService {
                 .getResultList();*/
     }
 
-    public List<Measurement> getMeasurementsByOutletInTimeFrame(GetMeasurementDto getMeasurementDto, String userId) {
+    public List<Measurement> getMeasurementsByOutletInTimeFrame(int outletId, String from, String to, String userId) {
         return entityManager.createNamedQuery("findMeasurementsByOutletInTimeFrame", Measurement.class)
-                .setParameter("outletId", getMeasurementDto.getOutletId())
+                .setParameter("outletId", outletId)
                 .setParameter("userId", userId)
-                .setParameter("from", LocalDateTime.parse(getMeasurementDto.getFrom(), DATE_FORMAT))
-                .setParameter("to", LocalDateTime.parse(getMeasurementDto.getTo(), DATE_FORMAT))
+                .setParameter("from", LocalDateTime.parse(from, DATE_FORMAT))
+                .setParameter("to", LocalDateTime.parse(to, DATE_FORMAT))
                 .getResultList();
     }
 

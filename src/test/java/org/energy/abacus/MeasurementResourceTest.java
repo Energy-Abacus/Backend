@@ -43,9 +43,7 @@ class MeasurementResourceTest {
                 .then().statusCode(204);
 
         given().when()
-                .body("{\"outletId\": "+outletId+", \"from\": \"2022/03/03 13:22:00\", \"to\": \"2022/03/03 13:23:00\"}")
-                .header("Content-Type", "application/json")
-                .get("/api/v1/measurements")
+                .get("/api/v1/measurements?outletId="+outletId+"&from=2022/03/03 13:22:00&to=2022/03/03 13:23:00")
                 .then()
                     .statusCode(200)
                     .body("$.size()", is(1),
