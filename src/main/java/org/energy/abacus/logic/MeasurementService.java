@@ -1,12 +1,14 @@
 package org.energy.abacus.logic;
 
 import lombok.extern.java.Log;
+import org.energy.abacus.dtos.GetMeasurementDto;
 import org.energy.abacus.dtos.HubDto;
 import org.energy.abacus.dtos.MeasurementDto;
 import org.energy.abacus.dtos.OutletDto;
 import org.energy.abacus.entities.Hub;
 import org.energy.abacus.entities.Measurement;
 import org.energy.abacus.entities.Outlet;
+import org.jboss.logmanager.Level;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -26,8 +28,10 @@ public class MeasurementService {
     @Inject
     EntityManager entityManager;
 
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+
+
     public void addNewMeasurement(final MeasurementDto measurementDto) {
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         Hub hub = getHubByToken(measurementDto.getPostToken());
 
         if (hub == null) {
@@ -35,7 +39,7 @@ public class MeasurementService {
         }
 
         Measurement measurementEntity = Measurement.builder()
-                .timeStamp(LocalDateTime.parse(measurementDto.getTimeStamp(), dateFormatter))
+                .timeStamp(LocalDateTime.parse(measurementDto.getTimeStamp(), DATE_FORMAT))
                 .powerOn(measurementDto.getPowerOn().equals("on"))
                 .wattPower(Double.parseDouble(measurementDto.getWattPower()))
                 .wattMinutePower(Double.parseDouble(measurementDto.getWattMinutePower()))
@@ -106,10 +110,12 @@ public class MeasurementService {
                 .getResultList();*/
     }
 
-    public List<Measurement> getMeasurementsByOutlet(int outletId, String userId) {
-        return entityManager.createNamedQuery("findMeasurementsByOutlet", Measurement.class)
-                .setParameter("outletId", outletId)
+    public List<Measurement> getMeasurementsByOutletInTimeFrame(GetMeasurementDto getMeasurementDto, String userId) {
+        return entityManager.createNamedQuery("findMeasurementsByOutletInTimeFrame", Measurement.class)
+                .setParameter("outletId", getMeasurementDto.getOutletId())
                 .setParameter("userId", userId)
+                .setParameter("from", LocalDateTime.parse(getMeasurementDto.getFrom(), DATE_FORMAT))
+                .setParameter("to", LocalDateTime.parse(getMeasurementDto.getTo(), DATE_FORMAT))
                 .getResultList();
     }
 

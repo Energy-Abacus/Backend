@@ -16,6 +16,11 @@ import java.time.LocalDateTime;
         @NamedQuery(name = "findMeasurementsByOutlet", query = "SELECT m FROM Measurement m " +
                 "WHERE m.outletId = :outletId " +
                 "AND m.outlet.hub.userid = :userId"),
+        @NamedQuery(name = "findMeasurementsByOutletInTimeFrame", query = "SELECT m FROM Measurement m " +
+                "WHERE m.outletId = :outletId " +
+                "AND m.outlet.hub.userid = :userId " +
+                "AND m.timeStamp BETWEEN :from AND :to"
+        ),
 })
 public class Measurement {
 
