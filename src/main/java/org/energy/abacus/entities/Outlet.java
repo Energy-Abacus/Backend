@@ -13,10 +13,9 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ApplicationScoped
 @NamedQueries({
-        @NamedQuery(name = "findOutletByIdentifier", query = "SELECT o FROM Outlet o WHERE o.outletIdentifier = :outletIdentifier AND o.userid = :userId"),
-        @NamedQuery(name = "findOutletsByUser", query = "SELECT o FROM Outlet o WHERE o.userid = :userId"),
+        @NamedQuery(name = "findOutletByIdentifier", query = "SELECT o FROM Outlet o WHERE o.outletIdentifier = :outletIdentifier AND o.hubId = :hubId"),
+        @NamedQuery(name = "findOutletsByHubId", query = "SELECT o FROM Outlet o WHERE o.hubId = :hubId")
 })
 public class Outlet {
 
@@ -30,11 +29,15 @@ public class Outlet {
     private boolean powerOn;
 
     @Column(unique = true, nullable = false)
-    private String userid;
-
-
-    @Column(unique = true, nullable = false)
     private String outletIdentifier;
+
+    @Column(name = "hubId", insertable = false, updatable = false)
+    private int hubId;
+
+    @ManyToOne
+    @JoinColumn(name = "hubId")
+    @JsonIgnore
+    private Hub hub;
 
     // Relations
     @OneToMany(

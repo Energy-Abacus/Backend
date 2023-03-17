@@ -7,13 +7,15 @@ public class MeasurementDto {
 
     private String timeStamp;
 
-    private boolean powerOn;
+    private String powerOn;
 
-    private double wattPower;
+    private String wattPower;
 
-    private double wattMinutePower;
+    private String wattMinutePower;
 
-    private double temperature;
+    private String temperature;
 
     private String outletIdentifier;
+
+    private String postToken;
 }
