@@ -44,8 +44,8 @@ public class MeasurementResource {
     @Authenticated
     public Collection<Measurement> getMeasurementsByOutletId(
             @QueryParam("outletId") int outletId,
-            @QueryParam("from") String from,
-            @QueryParam("to") String to
+            @QueryParam("from") int from,
+            @QueryParam("to") int to
     ) {
         return measurementService.getMeasurementsByOutletInTimeFrame(outletId, from, to, userId);
     }

@@ -13,11 +13,13 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.ws.rs.NotAllowedException;
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
+import java.util.TimeZone;
 
 @ApplicationScoped
 @Log
@@ -116,12 +118,12 @@ public class MeasurementService {
                 .getResultList();*/
     }
 
-    public List<Measurement> getMeasurementsByOutletInTimeFrame(int outletId, String from, String to, String userId) {
+    public List<Measurement> getMeasurementsByOutletInTimeFrame(int outletId, int from, int to, String userId) {
         return entityManager.createNamedQuery("findMeasurementsByOutletInTimeFrame", Measurement.class)
                 .setParameter("outletId", outletId)
                 .setParameter("userId", userId)
-                .setParameter("from", LocalDateTime.parse(from, DATE_FORMAT))
-                .setParameter("to", LocalDateTime.parse(to, DATE_FORMAT))
+                .setParameter("from", LocalDateTime.ofInstant(Instant.ofEpochSecond(from), TimeZone.getDefault().toZoneId()))
+                .setParameter("to", LocalDateTime.ofInstant(Instant.ofEpochSecond(to), TimeZone.getDefault().toZoneId()))
                 .getResultList();
     }
 
