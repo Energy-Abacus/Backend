@@ -23,9 +23,8 @@ import java.time.LocalDateTime;
         ),
         @NamedQuery(name = "findTotalPowerUsedUntilNow", query = "SELECT m.totalPowerUsed FROM Measurement m " +
                 "WHERE m.outletId = :outletId " +
-                "AND m.outlet.hub.userid = :userId " +
-                "ORDER BY m.timeStamp DESC LIMIT 1"
-        )
+                "ORDER BY m.timeStamp DESC"
+        ),
 })
 public class Measurement {
 

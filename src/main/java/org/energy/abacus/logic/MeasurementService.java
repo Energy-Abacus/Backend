@@ -38,9 +38,11 @@ public class MeasurementService {
 
         Outlet outlet = getOutlet(measurementDto.getOutletIdentifier(), hub.getId());
         double wattPower = Double.parseDouble(measurementDto.getWattPower());
-        double powerUsedUntilNow = entityManager.createNamedQuery("findTotalPowerUsedUntilNow", double.class)
+        List<Double> results = entityManager.createNamedQuery("findTotalPowerUsedUntilNow", Double.class)
                 .setParameter("outletId", outlet.getId())
-                .getSingleResult();
+                .setMaxResults(1)
+                .getResultList();
+        double powerUsedUntilNow = results.isEmpty() ? 0 : results.get(0);
 
         Measurement measurementEntity = Measurement.builder()
                 .timeStamp(LocalDateTime.parse(measurementDto.getTimeStamp(), DATE_FORMAT))

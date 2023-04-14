@@ -36,7 +36,7 @@ class MeasurementResourceTest {
                 .post("/api/v1/measurements/outlet")
                 .then().statusCode(200).extract().body().as(Integer.class);
 
-        given().body("{\"postToken\": \"" + hub.getPostToken() + "\", \"timeStamp\": \"2022/03/03 13:22:50\", \"powerOn\": \"true\", \"wattPower\": 0, \"wattMinutePower\": 0, \"temperature\": 20.0, \"outletIdentifier\": \"shelly-1234\"}")
+        given().body("{\"postToken\": \"" + hub.getPostToken() + "\", \"timeStamp\": \"2022/03/03 13:22:50\", \"powerOn\": \"true\", \"wattPower\": 0, \"temperature\": 20.0, \"outletIdentifier\": \"shelly-1234\"}")
                 .header("Content-Type", "application/json")
                 .when()
                 .post("/api/v1/measurements")
