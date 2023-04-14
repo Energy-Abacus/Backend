@@ -36,13 +36,19 @@ public class MeasurementService {
             throw new NotAllowedException("Wrong token!");
         }
 
+        Outlet outlet = getOutlet(measurementDto.getOutletIdentifier(), hub.getId());
+        double wattPower = Double.parseDouble(measurementDto.getWattPower());
+        double powerUsedUntilNow = entityManager.createNamedQuery("findTotalPowerUsedUntilNow", double.class)
+                .setParameter("outletId", outlet.getId())
+                .getSingleResult();
+
         Measurement measurementEntity = Measurement.builder()
                 .timeStamp(LocalDateTime.parse(measurementDto.getTimeStamp(), DATE_FORMAT))
                 .powerOn(measurementDto.getPowerOn().equals("on"))
-                .wattPower(Double.parseDouble(measurementDto.getWattPower()))
-                .wattMinutePower(Double.parseDouble(measurementDto.getWattMinutePower()))
+                .wattPower(wattPower)
+                .totalPowerUsed(powerUsedUntilNow + wattPower)
                 .temperature(Double.parseDouble(measurementDto.getTemperature()))
-                .outlet(getOutlet(measurementDto.getOutletIdentifier(), hub.getId()))
+                .outlet(outlet)
                 .build();
         entityManager.persist(measurementEntity);
     }

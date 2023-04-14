@@ -49,5 +49,6 @@ jobs:
           kubectl delete deployments.apps "abacus-backend-$URL_PREFIX"
           kubectl delete services "abacus-backend-$URL_PREFIX"
           kubectl delete serviceaccounts "abacus-backend-$URL_PREFIX"
+          kubectl delete ingresses.networking.k8s.io "abacus-backend-$URL_PREFIX"
           kubectl delete rolebindings.rbac.authorization.k8s.io "abacus-backend-$URL_PREFIX-view"
           kubectl delete rolebindings.rbac.authorization.k8s.io "abacus-backend-$URL_PREFIX-view-secrets"

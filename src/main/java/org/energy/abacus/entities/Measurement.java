@@ -21,6 +21,11 @@ import java.time.LocalDateTime;
                 "AND m.outlet.hub.userid = :userId " +
                 "AND m.timeStamp BETWEEN :from AND :to"
         ),
+        @NamedQuery(name = "findTotalPowerUsedUntilNow", query = "SELECT m.totalPowerUsed FROM Measurement m " +
+                "WHERE m.outletId = :outletId " +
+                "AND m.outlet.hub.userid = :userId " +
+                "ORDER BY m.timeStamp DESC LIMIT 1"
+        )
 })
 public class Measurement {
 
@@ -39,7 +44,7 @@ public class Measurement {
     private double wattPower;
 
     @Column(nullable = false)
-    private double wattMinutePower;
+    private double totalPowerUsed;
 
     @Column(nullable = false)
     private double temperature;
