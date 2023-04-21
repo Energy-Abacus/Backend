@@ -25,7 +25,7 @@ class MeasurementResourceTest {
         Hub hub = given().body("{\"name\": \"Test Hub\"}")
                 .header("Content-Type", "application/json")
                 .when()
-                .post("/api/v1/measurements/hub")
+                .post("/api/v1/hub")
                 .then()
                     .statusCode(200)
                     .extract().body().as(Hub.class);
@@ -33,13 +33,13 @@ class MeasurementResourceTest {
         int outletId = given().body("{\"name\": \"Test Outlet\", \"outletIdentifier\": \"shelly-1234\", \"hubId\": \"" + hub.getId() + "\"}")
                 .header("Content-Type", "application/json")
                 .when()
-                .post("/api/v1/measurements/outlet")
+                .post("/api/v1/outlet")
                 .then().statusCode(200).extract().body().as(Integer.class);
 
         given().body("{\"postToken\": \"" + hub.getPostToken() + "\", \"timeStamp\": \"2022/03/03 13:22:50\", \"powerOn\": \"true\", \"wattPower\": 0, \"temperature\": 20.0, \"outletIdentifier\": \"shelly-1234\"}")
                 .header("Content-Type", "application/json")
                 .when()
-                .post("/api/v1/measurements")
+                .post("/api/v1/measurement")
                 .then().statusCode(204);
 
         given().when()
@@ -47,6 +47,6 @@ class MeasurementResourceTest {
                 .then()
                     .statusCode(200)
                     .body("$.size()", is(1),
-                        "[0].temperature", is(20.0F));
+                        "[0].temperature", is(20.0));
     }
 }

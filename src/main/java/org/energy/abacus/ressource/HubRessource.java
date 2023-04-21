@@ -5,11 +5,8 @@ import lombok.extern.java.Log;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
 import org.energy.abacus.dtos.HubDto;
-import org.energy.abacus.dtos.MeasurementDto;
-import org.energy.abacus.dtos.OutletDto;
 import org.energy.abacus.entities.Hub;
-import org.energy.abacus.entities.Measurement;
-import org.energy.abacus.entities.Outlet;
+import org.energy.abacus.logic.HubService;
 import org.energy.abacus.logic.MeasurementService;
 
 import javax.enterprise.context.RequestScoped;
@@ -22,31 +19,35 @@ import java.util.Collection;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 
-@Path("/api/v1/measurement")
+@Path("/api/v1/hub")
 @RequestScoped
 @Log
-public class MeasurementResource {
+public class HubRessource {
 
     @Inject
-    MeasurementService measurementService;
+    HubService hubService;
 
     @Inject
     @Claim(standard = Claims.sub)
     String userId;
 
     @POST
+    @Authenticated
     @Transactional
-    public void save(final MeasurementDto measurement) {
-        measurementService.addNewMeasurement(measurement);
+    public Hub saveHub(final HubDto hubDto) {
+        return hubService.addNewHub(hubDto, userId);
     }
 
     @GET
     @Authenticated
-    public Collection<Measurement> getMeasurementsByOutletId(
-            @QueryParam("outletId") int outletId,
-            @QueryParam("from") int from,
-            @QueryParam("to") int to
-    ) {
-        return measurementService.getMeasurementsByOutletInTimeFrame(outletId, from, to, userId);
+    public Collection<Hub> getAllHubs() {
+        return hubService.getAllHubsForUser(userId);
+    }
+
+    @GET
+    @Authenticated
+    @Path("{id}")
+    public Hub getHub(@PathParam("id") int id) {
+        return hubService.getHubById(id, userId);
     }
 }
