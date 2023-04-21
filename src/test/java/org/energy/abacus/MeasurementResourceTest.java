@@ -43,7 +43,7 @@ class MeasurementResourceTest {
                 .then().statusCode(204);
 
         given().when()
-                .get("/api/v1/measurements?outletId="+outletId+"&from=1646310120&to=1646310180")
+                .get("/api/v1/measurements?outletId="+outletId+"&from=1646310120&to=1646316000")
                 .then()
                     .statusCode(200)
                     .body("$.size()", is(1),

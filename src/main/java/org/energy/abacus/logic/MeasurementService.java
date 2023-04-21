@@ -15,6 +15,7 @@ import javax.ws.rs.NotAllowedException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Collection;
@@ -122,8 +123,8 @@ public class MeasurementService {
         return entityManager.createNamedQuery("findMeasurementsByOutletInTimeFrame", Measurement.class)
                 .setParameter("outletId", outletId)
                 .setParameter("userId", userId)
-                .setParameter("from", LocalDateTime.ofInstant(Instant.ofEpochSecond(from), TimeZone.getDefault().toZoneId()))
-                .setParameter("to", LocalDateTime.ofInstant(Instant.ofEpochSecond(to), TimeZone.getDefault().toZoneId()))
+                .setParameter("from", LocalDateTime.ofInstant(Instant.ofEpochSecond(from), ZoneId.of("UTC")))
+                .setParameter("to", LocalDateTime.ofInstant(Instant.ofEpochSecond(to), ZoneId.of("UTC")))
                 .getResultList();
     }
 
