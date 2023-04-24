@@ -43,10 +43,10 @@ class MeasurementResourceTest {
                 .then().statusCode(204);
 
         given().when()
-                .get("/api/v1/measurements?outletId="+outletId+"&from=1646310120&to=1646316000")
+                .get("/api/v1/measurement?outletId="+outletId+"&from=1646310120&to=1646316000")
                 .then()
                     .statusCode(200)
                     .body("$.size()", is(1),
-                        "[0].temperature", is(20.0));
+                        "[0].temperature", is(20.0F));
     }
 }
