@@ -27,6 +27,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.logging.Level;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,13 +58,12 @@ public class MeasurementService {
     String bucketName;
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-    Logger logger = LoggerFactory.getLogger(MeasurementService.class);
     public static final Long DATA_RETENTION_DAYS = -365L;
 
     @PostConstruct
-    private void initializeInfluxDBClient() {
-        logger.info("Connecting to: {}, token: {}, org: {}, bucketId: {}",
-                connectionUrl, token, orgId, bucketId);
+    public void initializeInfluxDBClient() {
+        log.log(Level.SEVERE, String.format("Connecting to: %s, token: %s, org: %s, bucketId: %s",
+                connectionUrl, token, orgId, bucketId));
         this.influxDBClient = InfluxDBClientFactory.create(connectionUrl, token.toCharArray(), orgId, bucketId);
     }
 
@@ -107,7 +108,7 @@ public class MeasurementService {
     public double getTotalPowerUsed(GetTotalPowerUsedDto dto) {
         Hub hub = hubService.getHubByToken(dto.getPostToken());
         if (hub == null) {
-            throw new NotAllowedException("Wrong token!");
+            //throw new NotAllowedException("Wrong token!");
         }
         Outlet outlet = outletService.getOutlet(dto.getOutletIdentifier(), hub.getId());
 

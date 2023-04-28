@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
 class MeasurementResourceTest {
@@ -36,7 +37,15 @@ class MeasurementResourceTest {
                 .post("/api/v1/outlet")
                 .then().statusCode(200).extract().body().as(Integer.class);
 
-        given().body("{\"postToken\": \"" + hub.getPostToken() + "\", \"timeStamp\": \"2022/03/03 13:22:50\", \"powerOn\": \"true\", \"wattPower\": 0, \"temperature\": 20.0, \"outletIdentifier\": \"shelly-1234\"}")
+        double totalPowerUsed = given().body("\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\"")
+                .header("Content-Type", "application/json")
+                .when()
+                .post("/api/v1/measurement/total")
+                .then().statusCode(200).extract().body().as(Double.class);
+
+        assertEquals(0.0, totalPowerUsed);
+
+        given().body("{\"postToken\": \"" + hub.getPostToken() + "\", \"timeStamp\": \"2022/03/03 13:22:50\", \"powerOn\": \"true\", \"wattPower\": 0, \"totalPowerUsed\": " + totalPowerUsed + 5 + " \"temperature\": 20.0, \"outletIdentifier\": \"shelly-1234\"}")
                 .header("Content-Type", "application/json")
                 .when()
                 .post("/api/v1/measurement")
