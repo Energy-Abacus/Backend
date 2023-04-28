@@ -4,12 +4,9 @@ import io.quarkus.security.Authenticated;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
-import org.energy.abacus.dtos.HubDto;
 import org.energy.abacus.dtos.MeasurementDto;
-import org.energy.abacus.dtos.OutletDto;
-import org.energy.abacus.entities.Hub;
-import org.energy.abacus.entities.Measurement;
-import org.energy.abacus.entities.Outlet;
+import org.energy.abacus.dtos.GetTotalPowerUsedDto;
+import org.energy.abacus.entities.Data;
 import org.energy.abacus.logic.MeasurementService;
 
 import javax.enterprise.context.RequestScoped;
@@ -41,8 +38,14 @@ public class MeasurementResource {
     }
 
     @GET
+    @Path("/totalPowerUsed")
+    public double getTotalPowerUsed(final GetTotalPowerUsedDto dto) {
+        return measurementService.getTotalPowerUsed(dto);
+    }
+
+    @GET
     @Authenticated
-    public Collection<Measurement> getMeasurementsByOutletId(
+    public Collection<Data> getMeasurementsByOutletId(
             @QueryParam("outletId") int outletId,
             @QueryParam("from") int from,
             @QueryParam("to") int to

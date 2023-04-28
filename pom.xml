@@ -104,6 +104,11 @@
       <artifactId>influxdb-client-java</artifactId>
       <version>6.6.0</version>
     </dependency>
+    <dependency>
+      <groupId>com.influxdb</groupId>
+      <artifactId>flux-dsl</artifactId>
+      <version>6.6.0</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

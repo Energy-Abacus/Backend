@@ -3,7 +3,6 @@ package org.energy.abacus.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.*;
 import java.util.Set;
 
@@ -38,13 +37,4 @@ public class Outlet {
     @JoinColumn(name = "hubId")
     @JsonIgnore
     private Hub hub;
-
-    // Relations
-    @OneToMany(
-            cascade = CascadeType.ALL,
-            mappedBy = "outlet",
-            fetch = FetchType.LAZY
-    )
-    @JsonIgnore
-    private Set<Measurement> measurements;
 }
