@@ -1,23 +1,28 @@
 package org.energy.abacus.logic;
 
+import com.influxdb.LogLevel;
+import com.influxdb.client.*;
+import com.influxdb.client.domain.WritePrecision;
+import com.influxdb.query.FluxTable;
+import com.influxdb.query.dsl.Flux;
+import com.influxdb.query.dsl.functions.restriction.Restrictions;
 import lombok.extern.java.Log;
-import org.energy.abacus.dtos.HubDto;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.energy.abacus.dtos.GetTotalPowerUsedDto;
 import org.energy.abacus.dtos.MeasurementDto;
-import org.energy.abacus.dtos.OutletDto;
+import org.energy.abacus.entities.Data;
 import org.energy.abacus.entities.Hub;
-import org.energy.abacus.entities.Measurement;
 import org.energy.abacus.entities.Outlet;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.ws.rs.NotAllowedException;
-import java.security.SecureRandom;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.Collection;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.logging.Level;
 
 @ApplicationScoped
 @Log
@@ -26,101 +31,91 @@ public class MeasurementService {
     @Inject
     EntityManager entityManager;
 
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+    @Inject
+    HubService hubService;
 
+    @Inject
+    OutletService outletService;
+
+    private InfluxDBClient influxDBClient;
+    @ConfigProperty(name = "influxdb.url")
+    String connectionUrl;
+    @ConfigProperty(name = "influxdb.token")
+    String token;
+    @ConfigProperty(name = "influxdb.org")
+    String orgId;
+    @ConfigProperty(name = "influxdb.bucket")
+    String bucketId;
+    @ConfigProperty(name = "influxdb.bucket")
+    String bucketName;
+    @ConfigProperty(name = "influxdb.loglevel", defaultValue = "NONE")
+    LogLevel logLevel;
+
+    public static final Long DATA_RETENTION_DAYS = -365L;
+
+    @PostConstruct
+    public void initializeInfluxDBClient() {
+        log.log(Level.INFO, String.format("Connecting to: %s, token: %s, org: %s, bucketId: %s",
+                connectionUrl, token, orgId, bucketId));
+        this.influxDBClient = InfluxDBClientFactory.create(connectionUrl, token.toCharArray(), orgId, bucketId);
+        this.influxDBClient.setLogLevel(logLevel);
+    }
 
     public void addNewMeasurement(final MeasurementDto measurementDto) {
-        Hub hub = getHubByToken(measurementDto.getPostToken());
+        Hub hub = hubService.getHubByToken(measurementDto.getPostToken());
 
         if (hub == null) {
             throw new NotAllowedException("Wrong token!");
         }
 
-        Measurement measurementEntity = Measurement.builder()
-                .timeStamp(LocalDateTime.parse(measurementDto.getTimeStamp(), DATE_FORMAT))
-                .powerOn(measurementDto.getPowerOn().equals("on"))
-                .wattPower(Double.parseDouble(measurementDto.getWattPower()))
-                .wattMinutePower(Double.parseDouble(measurementDto.getWattMinutePower()))
-                .temperature(Double.parseDouble(measurementDto.getTemperature()))
-                .outlet(getOutlet(measurementDto.getOutletIdentifier(), hub.getId()))
-                .build();
-        entityManager.persist(measurementEntity);
-    }
+        Outlet outlet = outletService.getOutlet(measurementDto.getOutletIdentifier(), hub.getId());
 
-    public int addNewOutlet(final OutletDto outletDTO, String userId) {
-        Hub hub = getHubById(outletDTO.getHubId(), userId);
-        Outlet outletEntity = Outlet.builder()
-                .name(outletDTO.getName())
-                .outletIdentifier(outletDTO.getOutletIdentifier())
-                .hub(hub)
-                .build();
-        entityManager.persist(outletEntity);
-        return outletEntity.getId();
-    }
+        Data data = Data.builder()
+                        .timeStamp(Instant.ofEpochSecond(Long.parseLong(measurementDto.getTimeStamp())))
+                        .wattPower(Double.parseDouble(measurementDto.getWattPower()))
+                        .totalPowerUsed(Double.parseDouble(measurementDto.getTotalPowerUsed()))
+                        .temperature(Double.parseDouble(measurementDto.getTemperature()))
+                        .outletId(Integer.toString(outlet.getId()))
+                        .build();
 
-    public Hub addNewHub(final HubDto hubDto, String userId) {
-        Hub hubEntity = Hub.builder()
-                .name(hubDto.getName())
-                .postToken(generateToken())
-                .userid(userId)
-                .build();
-        entityManager.persist(hubEntity);
-        return hubEntity;
-    }
-
-    public Hub getHubByToken(String postToken) {
-        List<Hub> hubs = entityManager.createNamedQuery("findHubByToken", Hub.class)
-                .setParameter("token", postToken)
-                .getResultList();
-
-        return hubs.isEmpty() ? null : hubs.get(0);
-    }
-
-    public Hub getHubById(int id, String userId) {
-        Hub hub = entityManager.createNamedQuery("findHubById", Hub.class)
-                .setParameter("id", id)
-                .getSingleResult();
-
-        if (!hub.getUserid().equals(userId)) {
-            throw new NotAllowedException("Hub does not belong to user");
+        try (WriteApi writeApi = influxDBClient.makeWriteApi()) {
+            writeApi.writeMeasurement(WritePrecision.S, data);
         }
-        return hub;
     }
 
-    public List<Hub> getAllHubsForUser(String userId) {
-        return entityManager.createNamedQuery("findHubsByUserId", Hub.class)
-                .setParameter("userId", userId)
-                .getResultList();
+    public List<Data> getMeasurementsByOutletInTimeFrame(int outletId, long from, long to, String userId) {
+
+        if (!outletService.outletBelongsToUser(outletId, userId)) {
+            throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
+        }
+
+        String temperatureByLocationQuery = Flux.from(bucketName)
+                .range(Instant.ofEpochSecond(from), Instant.ofEpochSecond(to))
+                .filter(Restrictions
+                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
+                .pivot(new String[] { "_time" }, new String[] { "_field" }, "_value")
+                .toString();
+        QueryApi queryApi = influxDBClient.getQueryApi();
+        return queryApi.query(temperatureByLocationQuery, Data.class);
     }
 
-    public Outlet getOutlet(String outletIdentifier, int hubId) {
-        return entityManager.createNamedQuery("findOutletByIdentifier", Outlet.class)
-                .setParameter("outletIdentifier", outletIdentifier)
-                .setParameter("hubId", hubId)
-                .getSingleResult();
-    }
+    public double getTotalPowerUsed(GetTotalPowerUsedDto dto) {
+        Hub hub = hubService.getHubByToken(dto.getPostToken());
+        if (hub == null) {
+            throw new NotAllowedException("Wrong token!");
+        }
+        Outlet outlet = outletService.getOutlet(dto.getOutletIdentifier(), hub.getId());
 
-    public Collection<Outlet> getAllOutletsForHub(int hubId, String userId) {
-        Hub hub = getHubById(hubId, userId);
-        return hub.getOutlets();
-        /*return entityManager.createNamedQuery("findOutletsByHubId", Outlet.class)
-                .setParameter("hubId", hubId)
-                .getResultList();*/
-    }
-
-    public List<Measurement> getMeasurementsByOutletInTimeFrame(int outletId, String from, String to, String userId) {
-        return entityManager.createNamedQuery("findMeasurementsByOutletInTimeFrame", Measurement.class)
-                .setParameter("outletId", outletId)
-                .setParameter("userId", userId)
-                .setParameter("from", LocalDateTime.parse(from, DATE_FORMAT))
-                .setParameter("to", LocalDateTime.parse(to, DATE_FORMAT))
-                .getResultList();
-    }
-
-    public String generateToken() {
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] token = new byte[32];
-        secureRandom.nextBytes(token);
-        return Base64.getEncoder().encodeToString(token);
+        String totalPowerUsedQuery = Flux.from(bucketName)
+                .range(-5L, ChronoUnit.YEARS)
+                .filter(Restrictions
+                        .and(Restrictions.tag("outletId").equal(Integer.toString(outlet.getId())))
+                        .and(Restrictions.field().equal("totalPowerUsed")))
+                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
+                .last()
+                .toString();
+        QueryApi queryApi = influxDBClient.getQueryApi();
+        List<FluxTable> results = queryApi.query(totalPowerUsedQuery);
+        return results.isEmpty() ? 0 : (double) results.get(0).getRecords().get(0).getValueByKey("_value");
     }
 }

@@ -11,7 +11,7 @@ public class MeasurementDto {
 
     private String wattPower;
 
-    private String wattMinutePower;
+    private String totalPowerUsed;
 
     private String temperature;
 
