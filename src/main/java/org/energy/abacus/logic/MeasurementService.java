@@ -1,19 +1,17 @@
 package org.energy.abacus.logic;
 
-import com.influxdb.annotations.Measurement;
-import com.influxdb.client.InfluxDBClient;
-import com.influxdb.client.InfluxDBClientFactory;
-import com.influxdb.client.QueryApi;
-import com.influxdb.client.WriteApi;
+import com.influxdb.LogLevel;
+import com.influxdb.client.*;
 import com.influxdb.client.domain.WritePrecision;
+import com.influxdb.query.FluxTable;
 import com.influxdb.query.dsl.Flux;
 import com.influxdb.query.dsl.functions.restriction.Restrictions;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.energy.abacus.dtos.GetTotalPowerUsedDto;
 import org.energy.abacus.dtos.MeasurementDto;
-import org.energy.abacus.entities.Hub;
 import org.energy.abacus.entities.Data;
+import org.energy.abacus.entities.Hub;
 import org.energy.abacus.entities.Outlet;
 
 import javax.annotation.PostConstruct;
@@ -22,15 +20,9 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.ws.rs.NotAllowedException;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.logging.Level;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 @Log
@@ -50,21 +42,23 @@ public class MeasurementService {
     String connectionUrl;
     @ConfigProperty(name = "influxdb.token")
     String token;
-    @ConfigProperty(name = "influxdb.org-id")
+    @ConfigProperty(name = "influxdb.org")
     String orgId;
-    @ConfigProperty(name = "influxdb.bucketId")
+    @ConfigProperty(name = "influxdb.bucket")
     String bucketId;
     @ConfigProperty(name = "influxdb.bucket")
     String bucketName;
+    @ConfigProperty(name = "influxdb.loglevel", defaultValue = "NONE")
+    LogLevel logLevel;
 
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     public static final Long DATA_RETENTION_DAYS = -365L;
 
     @PostConstruct
     public void initializeInfluxDBClient() {
-        log.log(Level.SEVERE, String.format("Connecting to: %s, token: %s, org: %s, bucketId: %s",
+        log.log(Level.INFO, String.format("Connecting to: %s, token: %s, org: %s, bucketId: %s",
                 connectionUrl, token, orgId, bucketId));
         this.influxDBClient = InfluxDBClientFactory.create(connectionUrl, token.toCharArray(), orgId, bucketId);
+        this.influxDBClient.setLogLevel(logLevel);
     }
 
     public void addNewMeasurement(final MeasurementDto measurementDto) {
@@ -75,31 +69,31 @@ public class MeasurementService {
         }
 
         Outlet outlet = outletService.getOutlet(measurementDto.getOutletIdentifier(), hub.getId());
-        double wattPower = Double.parseDouble(measurementDto.getWattPower());
 
+        Data data = Data.builder()
+                        .timeStamp(Instant.ofEpochSecond(Long.parseLong(measurementDto.getTimeStamp())))
+                        .wattPower(Double.parseDouble(measurementDto.getWattPower()))
+                        .totalPowerUsed(Double.parseDouble(measurementDto.getTotalPowerUsed()))
+                        .temperature(Double.parseDouble(measurementDto.getTemperature()))
+                        .outletId(Integer.toString(outlet.getId()))
+                        .build();
 
-        WriteApi writeApi = influxDBClient.getWriteApi();
-
-        Data measurement = new Data();
-        measurement.setTimeStamp(LocalDateTime.parse(measurementDto.getTimeStamp(), DATE_FORMAT));
-        measurement.setPowerOn(measurementDto.getPowerOn().equals("on"));
-        measurement.setWattPower(wattPower);
-        measurement.setTotalPowerUsed(wattPower);
-        measurement.setTemperature(Double.parseDouble(measurementDto.getTemperature()));
-        measurement.setOutletId(outlet.getId());
-
-        writeApi.writeMeasurement(WritePrecision.NS, measurement);
-        writeApi.close();
+        try (WriteApi writeApi = influxDBClient.makeWriteApi()) {
+            writeApi.writeMeasurement(WritePrecision.S, data);
+        }
     }
 
-    public List<Data> getMeasurementsByOutletInTimeFrame(int outletId, int from, int to, String userId) {
+    public List<Data> getMeasurementsByOutletInTimeFrame(int outletId, long from, long to, String userId) {
+
+        if (!outletService.outletBelongsToUser(outletId, userId)) {
+            throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
+        }
 
         String temperatureByLocationQuery = Flux.from(bucketName)
-                .range(DATA_RETENTION_DAYS, ChronoUnit.DAYS)
-                .filter(Restrictions.and(Restrictions.tag("outletId").equal(outletId)))
-                .filter(Restrictions.and(Restrictions.tag("from").equal(LocalDateTime.ofInstant(Instant.ofEpochSecond(from), ZoneId.of("UTC")))))
-                .filter(Restrictions.and(Restrictions.tag("to").equal(LocalDateTime.ofInstant(Instant.ofEpochSecond(to), ZoneId.of("UTC")))))
-                .filter(Restrictions.and(Restrictions.tag("userId").equal(userId)))
+                .range(Instant.ofEpochSecond(from), Instant.ofEpochSecond(to))
+                .filter(Restrictions
+                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
+                .pivot(new String[] { "_time" }, new String[] { "_field" }, "_value")
                 .toString();
         QueryApi queryApi = influxDBClient.getQueryApi();
         return queryApi.query(temperatureByLocationQuery, Data.class);
@@ -108,17 +102,20 @@ public class MeasurementService {
     public double getTotalPowerUsed(GetTotalPowerUsedDto dto) {
         Hub hub = hubService.getHubByToken(dto.getPostToken());
         if (hub == null) {
-            //throw new NotAllowedException("Wrong token!");
+            throw new NotAllowedException("Wrong token!");
         }
         Outlet outlet = outletService.getOutlet(dto.getOutletIdentifier(), hub.getId());
 
-        String dataByTimeQuery = Flux.from(bucketName)
-                .range(DATA_RETENTION_DAYS, ChronoUnit.DAYS)
-                .filter(Restrictions.and(Restrictions.tag("outletId").equal(outlet.getId())))
-                .last("totalPowerUsed")
+        String totalPowerUsedQuery = Flux.from(bucketName)
+                .range(-5L, ChronoUnit.YEARS)
+                .filter(Restrictions
+                        .and(Restrictions.tag("outletId").equal(Integer.toString(outlet.getId())))
+                        .and(Restrictions.field().equal("totalPowerUsed")))
+                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
+                .last()
                 .toString();
         QueryApi queryApi = influxDBClient.getQueryApi();
-        List<Double> results = queryApi.query(dataByTimeQuery, Double.class);
-        return results.isEmpty() ? 0 : results.get(0);
+        List<FluxTable> results = queryApi.query(totalPowerUsedQuery);
+        return results.isEmpty() ? 0 : (double) results.get(0).getRecords().get(0).getValueByKey("_value");
     }
 }

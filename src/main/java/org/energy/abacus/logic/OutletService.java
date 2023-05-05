@@ -45,4 +45,11 @@ public class OutletService {
                 .setParameter("hubId", hubId)
                 .getResultList();*/
     }
+
+    public boolean outletBelongsToUser(int outletId, String userId) {
+        return entityManager.createNamedQuery("findOutletByIdAndUser", Outlet.class)
+                .setParameter("outletId", outletId)
+                .setParameter("userId", userId)
+                .getResultList().size() > 0;
+    }
 }

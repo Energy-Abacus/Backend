@@ -1,12 +1,10 @@
 package org.energy.abacus.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.influxdb.annotations.Column;
 import com.influxdb.annotations.Measurement;
 import lombok.*;
 
-
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Builder
 @Getter
@@ -16,11 +14,8 @@ import java.time.LocalDateTime;
 @Measurement(name = "data")
 public class Data {
 
-    @Column(name = "timeStamp")
-    private LocalDateTime timeStamp;
-
-    @Column(name = "powerOn")
-    private boolean powerOn;
+    @Column(name = "timeStamp", timestamp = true)
+    private Instant timeStamp;
 
     @Column(name = "wattPower")
     private double wattPower;
@@ -31,7 +26,7 @@ public class Data {
     @Column(name = "temperature")
     private double temperature;
 
-    @Column(name = "outletId",tag = true)
-    private int outletId;
+    @Column(name = "outletId", tag = true)
+    private String outletId;
 
 }
