@@ -20,6 +20,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 @ApplicationScoped
@@ -40,7 +41,7 @@ public class FriendshipService {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .headers("Content-Type", "application/x-www-form-urlencoded")
-                .uri(URI.create(domain + "/oauth/token"))
+                .uri(URI.create(domain + "oauth/token"))
                 .POST(HttpRequest.BodyPublishers.ofString("&audience=" + audience + "&client_id=" + clientId + "&client_secret=" + clientSecret
                         + "&grant_type=client_credentials"))
                 .build();
@@ -96,8 +97,8 @@ public class FriendshipService {
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .headers("Content-Type", "application/x-www-form-urlencoded")
-                .uri(URI.create(domain + "/api/v2/users?search_engine=v3&q=username:*" + chars + "*"))
+                .headers("authorization", "Bearer " + token)
+                .uri(URI.create(domain + "api/v2/users?search_engine=v3&q=username:*" + chars + "*"))
                 .GET()
                 .build();
 
@@ -106,7 +107,8 @@ public class FriendshipService {
             UserDto[] users = objectMapper.readValue(response.body(), UserDto[].class);
             return Arrays.asList(users);
         } catch (IOException | InterruptedException e) {
-            throw new InternalServerErrorException();
+            log.log(Level.SEVERE, "Error while getting users from Auth0", e);
+            throw new InternalServerErrorException("Error while getting users from Auth0");
         }
     }
 }

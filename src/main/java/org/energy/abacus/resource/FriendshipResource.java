@@ -56,7 +56,6 @@ public class FriendshipResource {
 
     @GET
     @Path("/search")
-    @Authenticated
     public Collection<UserDto> searchByUserName(@QueryParam("username") String username) {
         return service.getAllUsersByName(username);
     }
