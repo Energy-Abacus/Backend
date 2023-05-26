@@ -100,6 +100,6 @@ class MeasurementResourceTest {
                 .get("/api/v1/measurement/total")
                 .then().statusCode(200).extract().body().as(Double.class);
 
-        assertEquals(7.0, totalPowerUsed);22
+        assertEquals(7.0, totalPowerUsed);
     }
 }
