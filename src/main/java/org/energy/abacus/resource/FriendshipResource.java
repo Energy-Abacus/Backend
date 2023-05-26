@@ -4,6 +4,7 @@ import io.quarkus.security.Authenticated;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
+import org.energy.abacus.dtos.UserDto;
 import org.energy.abacus.entities.Friendship;
 import org.energy.abacus.logic.FriendshipService;
 
@@ -31,7 +32,9 @@ public class FriendshipResource {
     @POST
     @Authenticated
     @Transactional
-    public int newRequest(String receiver){return service.addNewFriend(receiver,userId);}
+    public int newRequest(String receiver) {
+        return service.addNewFriend(receiver,userId);
+    }
 
     @POST
     @Path("/reaction")
@@ -39,7 +42,7 @@ public class FriendshipResource {
     @Transactional
     public int update(
             @QueryParam("receiver") String receiver,
-            @QueryParam("reaction") boolean reaction
+            @QueryParam("accept") boolean reaction
     ) {
         return service.reactionByReceiver(reaction,receiver,userId);
     }
@@ -47,5 +50,14 @@ public class FriendshipResource {
     @GET
     @Authenticated
     @Transactional
-    public Collection<Friendship> getAll(){return service.getFriendshipList(userId);}
+    public Collection<Friendship> getAll() {
+        return service.getFriendshipList(userId);
+    }
+
+    @GET
+    @Path("/search")
+    @Authenticated
+    public Collection<UserDto> searchByUserName(@QueryParam("username") String username) {
+        return service.getAllUsersByName(username);
+    }
 }

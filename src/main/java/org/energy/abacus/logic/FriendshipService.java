@@ -11,6 +11,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.InternalServerErrorException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -85,7 +86,7 @@ public class FriendshipService {
                 .getResultList();
     }
 
-    public Collection<UserDto> getAllUsersByName(String chars) throws IOException, InterruptedException {
+    public Collection<UserDto> getAllUsersByName(String chars) {
 
         Pattern pattern = Pattern.compile("^[a-zA-Z0-9_.-.!.#.$.^.~.@]*$");
 
@@ -99,9 +100,13 @@ public class FriendshipService {
                 .uri(URI.create(domain + "/api/v2/users?search_engine=v3&q=username:*" + chars + "*"))
                 .GET()
                 .build();
-        HttpResponse<String> response = client.send(request,HttpResponse.BodyHandlers.ofString());
 
-        UserDto[] users = objectMapper.readValue(response.body(), UserDto[].class);
-        return Arrays.asList(users);
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            UserDto[] users = objectMapper.readValue(response.body(), UserDto[].class);
+            return Arrays.asList(users);
+        } catch (IOException | InterruptedException e) {
+            throw new InternalServerErrorException();
+        }
     }
 }
