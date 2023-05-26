@@ -107,7 +107,7 @@ public class MeasurementService {
         Outlet outlet = outletService.getOutlet(dto.getOutletIdentifier(), hub.getId());
 
         String totalPowerUsedQuery = Flux.from(bucketName)
-                .range(-5L, ChronoUnit.YEARS)
+                .range(Instant.ofEpochSecond(dto.getFrom()), Instant.ofEpochSecond(dto.getTo()))
                 .filter(Restrictions
                         .and(Restrictions.tag("outletId").equal(Integer.toString(outlet.getId())))
                         .and(Restrictions.field().equal("totalPowerUsed")))

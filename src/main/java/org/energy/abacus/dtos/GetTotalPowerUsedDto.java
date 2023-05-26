@@ -6,4 +6,6 @@ import lombok.Getter;
 public class GetTotalPowerUsedDto {
     private String postToken;
     private String outletIdentifier;
+    private long from;
+    private long to;
 }
