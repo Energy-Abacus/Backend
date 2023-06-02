@@ -59,7 +59,7 @@ class MeasurementResourceTest {
                 .post("/api/v1/outlet")
                 .then().statusCode(200).extract().body().as(Integer.class);
 
-        double totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\", \"from\": 1646310120, \"to\": 1646316000}")
+        double totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\"}")
                 .header("Content-Type", "application/json")
                 .when()
                 .get("/api/v1/measurement/total")
@@ -79,7 +79,7 @@ class MeasurementResourceTest {
                     .body("$.size()", is(1),
                         "[0].temperature", is(20.0F));
 
-        totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\", \"from\": 1646310120, \"to\": 1646316000}")
+        totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\"}")
                 .header("Content-Type", "application/json")
                 .when()
                 .get("/api/v1/measurement/total")
@@ -94,7 +94,7 @@ class MeasurementResourceTest {
                 .post("/api/v1/measurement")
                 .then().statusCode(204);
 
-        totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\", \"from\": 1646310120, \"to\": 1646316000}")
+        totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\"}")
                 .header("Content-Type", "application/json")
                 .when()
                 .get("/api/v1/measurement/total")

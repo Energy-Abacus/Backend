@@ -51,7 +51,7 @@ public class MeasurementService {
     @ConfigProperty(name = "influxdb.loglevel", defaultValue = "NONE")
     LogLevel logLevel;
 
-    public static final Long DATA_RETENTION_DAYS = -365L;
+    public static final Long DATA_RETENTION_DAYS = -1095L;
 
     @PostConstruct
     public void initializeInfluxDBClient() {
@@ -107,7 +107,7 @@ public class MeasurementService {
         Outlet outlet = outletService.getOutlet(dto.getOutletIdentifier(), hub.getId());
 
         String totalPowerUsedQuery = Flux.from(bucketName)
-                .range(Instant.now().minus(DATA_RETENTION_DAYS, ChronoUnit.DAYS), Instant.now())
+                .range(DATA_RETENTION_DAYS, ChronoUnit.DAYS)
                 .filter(Restrictions
                         .and(Restrictions.tag("outletId").equal(Integer.toString(outlet.getId())))
                         .and(Restrictions.field().equal("totalPowerUsed")))
