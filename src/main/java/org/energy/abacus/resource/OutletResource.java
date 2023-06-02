@@ -1,4 +1,4 @@
-package org.energy.abacus.ressource;
+package org.energy.abacus.resource;
 
 import io.quarkus.security.Authenticated;
 import lombok.extern.java.Log;

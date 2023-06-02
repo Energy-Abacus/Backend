@@ -1,4 +1,4 @@
-package org.energy.abacus.ressource;
+package org.energy.abacus.resource;
 
 import io.quarkus.security.Authenticated;
 import lombok.extern.java.Log;
@@ -7,7 +7,6 @@ import org.eclipse.microprofile.jwt.Claims;
 import org.energy.abacus.dtos.HubDto;
 import org.energy.abacus.entities.Hub;
 import org.energy.abacus.logic.HubService;
-import org.energy.abacus.logic.MeasurementService;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -22,7 +21,7 @@ import java.util.Collection;
 @Path("/api/v1/hub")
 @RequestScoped
 @Log
-public class HubRessource {
+public class HubResource {
 
     @Inject
     HubService hubService;

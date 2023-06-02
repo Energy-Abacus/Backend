@@ -1,4 +1,4 @@
-package org.energy.abacus.ressource;
+package org.energy.abacus.resource;
 
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.jwt.Claim;
