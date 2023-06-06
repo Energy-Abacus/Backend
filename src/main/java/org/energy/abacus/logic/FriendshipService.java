@@ -3,6 +3,7 @@ package org.energy.abacus.logic;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.java.Log;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.energy.abacus.dtos.FriendshipDto;
 import org.energy.abacus.dtos.UserDto;
 import org.energy.abacus.entities.Friendship;
@@ -31,10 +32,14 @@ public class FriendshipService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    String domain = "https://dev-3adocs3bconafo8d.us.auth0.com/";
-    String clientId = "K97VVGMJaYDn5Z0Qw9tx7NaJXTeQrGZ0";
-    String clientSecret = "RGhYxlKdeQ6HTkwUaGZTBNjiV5Y2vRpZz4MWTFNhHnuzM2-7zR27pLCwNjMOsht3";
-    String audience = "https://dev-3adocs3bconafo8d.us.auth0.com/api/v2/";
+    @ConfigProperty(name = "auth0.management-api-url")
+    String domain;
+    @ConfigProperty(name = "auth0.management-api-client-id")
+    String clientId;
+    @ConfigProperty(name = "auth0.management-api-client-secret")
+    String clientSecret;
+    @ConfigProperty(name = "auth0.management-api-audience")
+    String audience;
     String token;
 
     public FriendshipService() throws IOException, InterruptedException {
