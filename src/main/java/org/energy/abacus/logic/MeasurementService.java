@@ -1,7 +1,10 @@
 package org.energy.abacus.logic;
 
 import com.influxdb.LogLevel;
-import com.influxdb.client.*;
+import com.influxdb.client.InfluxDBClient;
+import com.influxdb.client.InfluxDBClientFactory;
+import com.influxdb.client.QueryApi;
+import com.influxdb.client.WriteApi;
 import com.influxdb.client.domain.WritePrecision;
 import com.influxdb.query.FluxTable;
 import com.influxdb.query.dsl.Flux;
@@ -20,7 +23,6 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.ws.rs.NotAllowedException;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.logging.Level;
 
