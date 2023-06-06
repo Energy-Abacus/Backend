@@ -108,6 +108,7 @@ public class FriendshipService {
             return Arrays.asList(users);
         } catch (IOException | InterruptedException e) {
             log.log(Level.SEVERE, "Error while getting users from Auth0", e);
+            Thread.currentThread().interrupt();
             throw new InternalServerErrorException("Error while getting users from Auth0");
         }
     }
