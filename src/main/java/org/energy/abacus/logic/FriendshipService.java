@@ -73,15 +73,12 @@ public class FriendshipService {
                     .getSingleResult();
             return 1;
         }
-        else{
-            entityManager.createNamedQuery("deleteFriendshipByUsers", Friendship.class)
-                    .setParameter("sender", sender)
-                    .setParameter("receiver", receiver)
-                    .getSingleResult();
+
+        entityManager.createNamedQuery("deleteFriendshipByUsers", Friendship.class)
+                .setParameter("sender", sender)
+                .setParameter("receiver", receiver)
+                .executeUpdate();
             return 0;
-
-        }
-
     }
 
     public Collection<Friendship> getFriendshipList(String receiver){
