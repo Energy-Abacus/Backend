@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.energy.abacus.dtos.UserDto;
+import org.energy.abacus.dtos.UserFriendDto;
 import org.energy.abacus.entities.Friendship;
+import org.jose4j.jwk.Use;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -14,13 +16,19 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 @Log
@@ -83,8 +91,50 @@ public class FriendshipService {
 
     public Collection<Friendship> getFriendshipList(String receiver){
         return entityManager.createNamedQuery("findFriendshipUsers",Friendship.class)
-                .setParameter("receiver",receiver)
+                .setParameter("id",receiver)
                 .getResultList();
+    }
+
+    public Collection<UserFriendDto> getAllUserProfiles(String receiver){
+        Collection<Friendship> friendships = getFriendshipList(receiver);
+
+        Stream<UserFriendDto> outgoing = friendships.stream()
+                .filter(f -> !f.getRequestReceiverId().equals(receiver))
+                .map(f -> getUserFriendProfile(getUserById(f.getRequestReceiverId()), true, f.isAccepted()));
+
+        Stream<UserFriendDto> ingoing = friendships.stream()
+                .filter(f -> !f.getRequestSenderId().equals(receiver))
+                .map(f -> getUserFriendProfile(getUserById(f.getRequestReceiverId()), false, f.isAccepted()));
+
+        return Stream.concat(outgoing, ingoing).toList();
+    }
+
+    private UserFriendDto getUserFriendProfile(UserDto userDto, boolean outgoing, boolean accepted){
+        return UserFriendDto.builder()
+                .userId(userDto.getUserId())
+                .username(userDto.getUsername())
+                .picture(userDto.getPicture())
+                .accepted(accepted)
+                .outgoing(outgoing)
+                .build();
+    }
+
+    private UserDto getUserById(String userId) {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .headers("authorization", "Bearer " + token)
+                .uri(URI.create(domain + "api/v2/users/" + URLEncoder.encode(userId, StandardCharsets.UTF_8)))
+                .GET()
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return objectMapper.readValue(response.body(), UserDto.class);
+        } catch (IOException | InterruptedException e) {
+            log.log(Level.SEVERE, "Error while getting user information from Auth0", e);
+            Thread.currentThread().interrupt();
+            throw new InternalServerErrorException("Error while getting user information from Auth0");
+        }
     }
 
     public Collection<UserDto> getAllUsersByName(String chars) {

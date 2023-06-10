@@ -10,14 +10,11 @@ import io.quarkus.test.security.oidc.Claim;
 import io.quarkus.test.security.oidc.OidcSecurity;
 import io.quarkus.test.security.oidc.UserInfo;
 import org.energy.abacus.entities.Hub;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.InfluxDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-
-import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
@@ -25,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
 @Testcontainers
-class MeasurementResourceTest {
+class MeasurementTest {
 
     final PortBinding portBinding = new PortBinding(Ports.Binding.bindPort(8086), new ExposedPort(8086));
 
