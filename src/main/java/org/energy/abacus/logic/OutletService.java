@@ -49,4 +49,11 @@ public class OutletService {
                 .setParameter("userId", userId)
                 .getResultList().isEmpty();
     }
+
+    public Outlet getOutletById(int outletId, String userId) {
+        return entityManager.createNamedQuery("findOutletByIdAndUser", Outlet.class)
+                .setParameter("outletId", outletId)
+                .setParameter("userId", userId)
+                .getSingleResult();
+    }
 }
