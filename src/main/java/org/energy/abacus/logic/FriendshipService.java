@@ -47,11 +47,10 @@ public class FriendshipService {
 
     @PostConstruct
     public void initializeAuth0Api() throws IOException, InterruptedException {
-        System.out.println(domain);
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .headers("Content-Type", "application/x-www-form-urlencoded")
-                .uri(URI.create(domain + "oauth/token"))
+                .uri(URI.create(domain + "/oauth/token"))
                 .POST(HttpRequest.BodyPublishers.ofString("&audience=" + audience + "&client_id=" + clientId + "&client_secret=" + clientSecret
                         + "&grant_type=client_credentials"))
                 .build();
@@ -121,7 +120,7 @@ public class FriendshipService {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .headers("authorization", "Bearer " + token)
-                .uri(URI.create(domain + "api/v2/users/" + URLEncoder.encode(userId, StandardCharsets.UTF_8)))
+                .uri(URI.create(domain + "/api/v2/users/" + URLEncoder.encode(userId, StandardCharsets.UTF_8)))
                 .GET()
                 .build();
 
@@ -136,7 +135,6 @@ public class FriendshipService {
     }
 
     public Collection<UserDto> getAllUsersByName(String chars) {
-
         Pattern pattern = Pattern.compile("^[a-zA-Z0-9_.-.!.#.$.^.~.@]*$");
 
         if(!pattern.matcher(chars).matches()){
@@ -146,7 +144,7 @@ public class FriendshipService {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .headers("authorization", "Bearer " + token)
-                .uri(URI.create(domain + "api/v2/users?search_engine=v3&q=username:*" + chars + "*"))
+                .uri(URI.create(domain + "/api/v2/users?search_engine=v3&q=username:*" + chars + "*"))
                 .GET()
                 .build();
 
