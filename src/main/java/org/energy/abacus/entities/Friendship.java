@@ -11,7 +11,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 
-@NamedQuery(name = "findFriendshipByUsers", query = "SELECT f FROM Friendship f WHERE f.requestReceiverId = :receiver AND f.requestSenderId = :sender")
+@NamedQuery(name = "findFriendshipByUsers", query = "SELECT f FROM Friendship f WHERE (f.requestReceiverId = :id OR f.requestSenderId = :id) AND (f.requestReceiverId = :friendId OR f.requestSenderId = :friendId)")
 @NamedQuery(name = "updateFriendshipByUsers", query = "UPDATE Friendship SET accepted = :reaction WHERE requestReceiverId = :receiver AND requestSenderId = :sender")
 @NamedQuery(name = "deleteFriendshipByUsers", query = "DELETE FROM Friendship WHERE requestReceiverId = :receiver AND requestSenderId = :sender")
 @NamedQuery(name = "findFriendshipUsers", query = "SELECT f FROM Friendship f WHERE f.requestReceiverId = :id OR f.requestSenderId = :id")

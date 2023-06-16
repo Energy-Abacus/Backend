@@ -2,6 +2,8 @@ package org.energy.abacus.logic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.influxdb.query.dsl.Flux;
+import com.influxdb.query.dsl.functions.restriction.Restrictions;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.energy.abacus.dtos.UserDto;
@@ -21,6 +23,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,6 +52,7 @@ public class FriendshipService {
     String token;
 
     public FriendshipService() throws IOException, InterruptedException {
+        System.out.println("asdf" + domain);
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .headers("Content-Type", "application/x-www-form-urlencoded")
@@ -59,7 +63,6 @@ public class FriendshipService {
         HttpResponse<String> response = client.send(request,HttpResponse.BodyHandlers.ofString());
         final ObjectNode node = objectMapper.readValue(response.body(), ObjectNode.class);
         token = node.get("access_token").asText();
-
     }
 
     public int addNewFriend(String receiver, String sender){
@@ -161,5 +164,12 @@ public class FriendshipService {
             Thread.currentThread().interrupt();
             throw new InternalServerErrorException("Error while getting users from Auth0");
         }
+    }
+
+    public boolean isFriend(String id, String friendId){
+        return !entityManager.createNamedQuery("findFriendshipByUsers", Friendship.class)
+                .setParameter("id", id)
+                .setParameter("friendId", friendId)
+                .getResultList().isEmpty();
     }
 }
