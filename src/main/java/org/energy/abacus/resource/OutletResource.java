@@ -45,7 +45,8 @@ public class OutletResource {
 
     @GET
     @Authenticated
-    public Outlet getOutlet(@QueryParam("outletId") int outletId) {
+    @Path("{id}")
+    public Outlet getOutlet(@PathParam("id") int outletId) {
         return outletService.getOutletById(outletId, userId);
     }
 }

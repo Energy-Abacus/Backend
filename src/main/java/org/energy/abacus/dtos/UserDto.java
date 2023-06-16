@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserDto {
-    private String userId;
+    private String user_id;
     private String username;
     private String picture;
 }

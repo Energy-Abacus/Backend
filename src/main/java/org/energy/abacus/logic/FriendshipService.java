@@ -108,7 +108,7 @@ public class FriendshipService {
 
     private UserFriendDto getUserFriendProfile(UserDto userDto, boolean outgoing, boolean accepted){
         return UserFriendDto.builder()
-                .userId(userDto.getUserId())
+                .userId(userDto.getUser_id())
                 .username(userDto.getUsername())
                 .picture(userDto.getPicture())
                 .accepted(accepted)
