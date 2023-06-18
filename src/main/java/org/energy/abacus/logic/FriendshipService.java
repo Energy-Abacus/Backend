@@ -12,6 +12,7 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
 import java.io.IOException;
@@ -47,6 +48,11 @@ public class FriendshipService {
 
     @PostConstruct
     public void initializeAuth0Api() throws IOException, InterruptedException {
+        if (domain == null || domain.isBlank() || clientId == null || clientId.isBlank() || clientSecret == null || clientSecret.isBlank() || audience == null || audience.isBlank()) {
+            log.log(Level.SEVERE, "Auth0 Management API credentials are not set, skipping initialization");
+            return;
+        }
+
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .headers("Content-Type", "application/x-www-form-urlencoded")
@@ -69,17 +75,18 @@ public class FriendshipService {
         return friendshipEntity.getId();
     }
 
+    @Transactional
     public int reactionByReceiver(boolean requestReaction, String receiver, String sender){
         if(requestReaction) {
-            entityManager.createNamedQuery("updateFriendshipByUsers", Friendship.class)
+            entityManager.createNamedQuery("updateFriendshipByUsers")
                     .setParameter("reaction", true)
                     .setParameter("sender", sender)
                     .setParameter("receiver", receiver)
-                    .getSingleResult();
+                    .executeUpdate();
             return 1;
         }
 
-        entityManager.createNamedQuery("deleteFriendshipByUsers", Friendship.class)
+        entityManager.createNamedQuery("deleteFriendshipByUsers")
                 .setParameter("sender", sender)
                 .setParameter("receiver", receiver)
                 .executeUpdate();
