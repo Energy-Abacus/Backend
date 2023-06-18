@@ -6,6 +6,8 @@ import io.quarkus.test.security.oidc.Claim;
 import io.quarkus.test.security.oidc.OidcSecurity;
 import io.quarkus.test.security.oidc.UserInfo;
 import org.energy.abacus.dtos.FriendshipDto;
+import org.energy.abacus.dtos.UserDto;
+import org.energy.abacus.dtos.UserFriendDto;
 import org.energy.abacus.entities.Friendship;
 import org.energy.abacus.logic.FriendshipService;
 import org.junit.jupiter.api.BeforeEach;
@@ -126,6 +128,54 @@ class FriendshipTest {
                 .extract().body().as(Friendship[].class);
 
         assertEquals(0, friends.length);
+    }
+
+    @Test
+    @TestSecurity(user = "test1", roles = "user")
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = "test|1")
+    }, userinfo = {
+            @UserInfo(key= "sub", value = "test|1"),
+    })
+    void testSearch() {
+        UserDto[] users = given().get("/api/v1/friendship/search?username=testingnodelete")
+                .then()
+                .statusCode(200)
+                .extract().body().as(UserDto[].class);
+
+        assertTrue(users.length > 0);
+        assertEquals("auth0|648f2a5f8b85c8a6949f4b74", users[0].getUser_id());
+        assertEquals("testingnodelete", users[0].getUsername());
+    }
+
+    @Test
+    @TestSecurity(user = "test1", roles = "user")
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = "test|1")
+    }, userinfo = {
+            @UserInfo(key= "sub", value = "test|1"),
+    })
+    void testFriendDetails() {
+        given()
+                .header("Content-Type", "application/json")
+                .body("auth0|648f2a5f8b85c8a6949f4b74")
+                .post("/api/v1/friendship")
+                .then()
+                .statusCode(200);
+
+        friendshipService.reactionByReceiver(true, "auth0|648f2a5f8b85c8a6949f4b74", "test|1");
+
+        UserFriendDto[] users = given().get("/api/v1/friendship/friend-details")
+                .then()
+                .statusCode(200)
+                .extract().body().as(UserFriendDto[].class);
+
+        assertEquals(1, users.length);
+        assertEquals("auth0|648f2a5f8b85c8a6949f4b74", users[0].getUserId());
+        assertEquals("testingnodelete", users[0].getUsername());
+        assertTrue(users[0].isAccepted());
+        assertTrue(users[0].isOutgoing());
+
     }
 
     /*

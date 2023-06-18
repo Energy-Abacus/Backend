@@ -48,11 +48,6 @@ public class FriendshipService {
 
     @PostConstruct
     public void initializeAuth0Api() throws IOException, InterruptedException {
-        if (domain == null || domain.isBlank() || clientId == null || clientId.isBlank() || clientSecret == null || clientSecret.isBlank() || audience == null || audience.isBlank()) {
-            log.log(Level.SEVERE, "Auth0 Management API credentials are not set, skipping initialization");
-            return;
-        }
-
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .headers("Content-Type", "application/x-www-form-urlencoded")
