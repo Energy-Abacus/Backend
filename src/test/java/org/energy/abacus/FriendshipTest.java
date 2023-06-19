@@ -137,6 +137,35 @@ class FriendshipTest {
     }, userinfo = {
             @UserInfo(key= "sub", value = "test|1"),
     })
+    void testIsFriend() {
+        given()
+                .header("Content-Type", "application/json")
+                .body("test|2")
+                .post("/api/v1/friendship")
+                .then()
+                .statusCode(200);
+
+        friendshipService.reactionByReceiver(true, "test|2", "test|1");
+        Friendship[] friends = given().get("/api/v1/friendship")
+                .then()
+                .statusCode(200)
+                .extract().body().as(Friendship[].class);
+
+        assertEquals(1, friends.length);
+        assertTrue(friendshipService.isFriend("test|1", "test|2"));
+        assertTrue(friendshipService.isFriend("test|2", "test|1"));
+        assertFalse(friendshipService.isFriend("test|3", "test|1"));
+        assertFalse(friendshipService.isFriend("test|2", "test|3"));
+        assertFalse(friendshipService.isFriend("test|5", "test|10"));
+    }
+
+    @Test
+    @TestSecurity(user = "test1", roles = "user")
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = "test|1")
+    }, userinfo = {
+            @UserInfo(key= "sub", value = "test|1"),
+    })
     void testSearch() {
         UserDto[] users = given().get("/api/v1/friendship/search?username=testingnodelete")
                 .then()
@@ -177,12 +206,4 @@ class FriendshipTest {
         assertTrue(users[0].isOutgoing());
 
     }
-
-    /*
-     * Test cases:
-     * 1. Add friendship
-     * 2. Accept friendship
-     * 3. Reject friendship
-     * 4. Remove friendship
-     */
 }
