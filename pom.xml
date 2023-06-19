@@ -210,12 +210,12 @@
               <goal>report</goal>
             </goals>
           </execution>
-          <execution>
-            <id>default-check</id>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
+<!--          <execution>-->
+<!--            <id>default-check</id>-->
+<!--            <goals>-->
+<!--              <goal>check</goal>-->
+<!--            </goals>-->
+<!--            <configuration>-->
 <!--              <rules>-->
 <!--                <rule>-->
 <!--                  <element>CLASS</element>-->
@@ -232,8 +232,8 @@
 <!--                  </limits>-->
 <!--                </rule>-->
 <!--              </rules>-->
-            </configuration>
-          </execution>
+<!--            </configuration>-->
+<!--          </execution>-->
         </executions>
       </plugin>
     </plugins>
