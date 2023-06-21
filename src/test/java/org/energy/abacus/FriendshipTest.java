@@ -95,7 +95,7 @@ class FriendshipTest {
                 .then()
                 .statusCode(200);
 
-        friendshipService.reactionByReceiver(new FriendshipReactionDto("test|2", true), "test|1");
+        friendshipService.reactionByReceiver(new FriendshipReactionDto("test|1", true), "test|2");
         Friendship[] friends = given().get("/api/v1/friendship")
                 .then()
                 .statusCode(200)
@@ -122,7 +122,7 @@ class FriendshipTest {
                 .then()
                 .statusCode(200);
 
-        friendshipService.reactionByReceiver(new FriendshipReactionDto("test|2", false), "test|1");
+        friendshipService.reactionByReceiver(new FriendshipReactionDto("test|1", false), "test|2");
         Friendship[] friends = given().get("/api/v1/friendship")
                 .then()
                 .statusCode(200)
@@ -146,7 +146,7 @@ class FriendshipTest {
                 .then()
                 .statusCode(200);
 
-        friendshipService.reactionByReceiver(new FriendshipReactionDto("test|2", true), "test|1");
+        friendshipService.reactionByReceiver(new FriendshipReactionDto("test|1", true), "test|2");
         Friendship[] friends = given().get("/api/v1/friendship")
                 .then()
                 .statusCode(200)
@@ -193,7 +193,7 @@ class FriendshipTest {
                 .then()
                 .statusCode(200);
 
-        friendshipService.reactionByReceiver(new FriendshipReactionDto("auth0|648f2a5f8b85c8a6949f4b74", true), "test|1");
+        friendshipService.reactionByReceiver(new FriendshipReactionDto("test|1", true), "auth0|648f2a5f8b85c8a6949f4b74");
 
         UserFriendDto[] users = given().get("/api/v1/friendship/friend-details")
                 .then()

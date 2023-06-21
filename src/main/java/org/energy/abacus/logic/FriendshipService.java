@@ -72,19 +72,19 @@ public class FriendshipService {
     }
 
     @Transactional
-    public int reactionByReceiver(FriendshipReactionDto dto, String sender) {
+    public int reactionByReceiver(FriendshipReactionDto dto, String receiver) {
         if (dto.isAccept()) {
             entityManager.createNamedQuery("updateFriendshipByUsers")
                     .setParameter("reaction", true)
-                    .setParameter("sender", sender)
-                    .setParameter("receiver", dto.getReceiver())
+                    .setParameter("sender", dto.getSender())
+                    .setParameter("receiver", receiver)
                     .executeUpdate();
             return 1;
         }
 
         entityManager.createNamedQuery("deleteFriendshipByUsers")
-                .setParameter("sender", sender)
-                .setParameter("receiver", dto.getReceiver())
+                .setParameter("sender", dto.getSender())
+                .setParameter("receiver", receiver)
                 .executeUpdate();
         return 0;
     }

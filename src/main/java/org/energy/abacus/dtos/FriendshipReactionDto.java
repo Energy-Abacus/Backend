@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FriendshipReactionDto {
-    private String receiver;
+    private String sender;
     private boolean accept;
 }
