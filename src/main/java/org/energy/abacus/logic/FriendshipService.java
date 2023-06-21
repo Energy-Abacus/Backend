@@ -89,22 +89,22 @@ public class FriendshipService {
         return 0;
     }
 
-    public Collection<Friendship> getFriendshipList(String receiver){
+    public Collection<Friendship> getFriendshipList(String userId){
         return entityManager.createNamedQuery("findFriendshipUsers",Friendship.class)
-                .setParameter("id",receiver)
+                .setParameter("id", userId)
                 .getResultList();
     }
 
-    public Collection<UserFriendDto> getAllUserProfiles(String receiver){
-        Collection<Friendship> friendships = getFriendshipList(receiver);
+    public Collection<UserFriendDto> getAllUserProfiles(String userId){
+        Collection<Friendship> friendships = getFriendshipList(userId);
 
         Stream<UserFriendDto> outgoing = friendships.stream()
-                .filter(f -> !f.getRequestReceiverId().equals(receiver))
+                .filter(f -> !f.getRequestReceiverId().equals(userId))
                 .map(f -> getUserFriendProfile(getUserById(f.getRequestReceiverId()), true, f.isAccepted()));
 
         Stream<UserFriendDto> ingoing = friendships.stream()
-                .filter(f -> !f.getRequestSenderId().equals(receiver))
-                .map(f -> getUserFriendProfile(getUserById(f.getRequestReceiverId()), false, f.isAccepted()));
+                .filter(f -> !f.getRequestSenderId().equals(userId))
+                .map(f -> getUserFriendProfile(getUserById(f.getRequestSenderId()), false, f.isAccepted()));
 
         return Stream.concat(outgoing, ingoing).toList();
     }

@@ -207,4 +207,31 @@ class FriendshipTest {
         assertTrue(users[0].isOutgoing());
 
     }
+
+    @Test
+    @TestSecurity(user = "test1", roles = "user")
+    @OidcSecurity(claims = {
+            @Claim(key = "sub", value = "test|1")
+    }, userinfo = {
+            @UserInfo(key= "sub", value = "test|1"),
+    })
+    void testFriendDetailsNotAccepted() {
+        given()
+                .header("Content-Type", "application/json")
+                .body("auth0|648f2a5f8b85c8a6949f4b74")
+                .post("/api/v1/friendship")
+                .then()
+                .statusCode(200);
+
+        UserFriendDto[] users = given().get("/api/v1/friendship/friend-details")
+                .then()
+                .statusCode(200)
+                .extract().body().as(UserFriendDto[].class);
+
+        assertEquals(1, users.length);
+        assertEquals("auth0|648f2a5f8b85c8a6949f4b74", users[0].getUserId());
+        assertEquals("testingnodelete", users[0].getUsername());
+        assertFalse(users[0].isAccepted());
+        assertTrue(users[0].isOutgoing());
+    }
 }
