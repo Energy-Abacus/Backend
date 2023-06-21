@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.energy.abacus.dtos.FriendshipReactionDto;
 import org.energy.abacus.dtos.UserDto;
 import org.energy.abacus.dtos.UserFriendDto;
 import org.energy.abacus.entities.Friendship;
@@ -71,21 +72,21 @@ public class FriendshipService {
     }
 
     @Transactional
-    public int reactionByReceiver(boolean requestReaction, String receiver, String sender){
-        if(requestReaction) {
+    public int reactionByReceiver(FriendshipReactionDto dto, String sender) {
+        if (dto.isAccept()) {
             entityManager.createNamedQuery("updateFriendshipByUsers")
                     .setParameter("reaction", true)
                     .setParameter("sender", sender)
-                    .setParameter("receiver", receiver)
+                    .setParameter("receiver", dto.getReceiver())
                     .executeUpdate();
             return 1;
         }
 
         entityManager.createNamedQuery("deleteFriendshipByUsers")
                 .setParameter("sender", sender)
-                .setParameter("receiver", receiver)
+                .setParameter("receiver", dto.getReceiver())
                 .executeUpdate();
-            return 0;
+        return 0;
     }
 
     public Collection<Friendship> getFriendshipList(String receiver){

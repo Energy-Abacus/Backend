@@ -7,6 +7,7 @@ import org.energy.abacus.entities.Hub;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 import javax.ws.rs.NotAllowedException;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -19,6 +20,7 @@ public class HubService {
     @Inject
     EntityManager entityManager;
 
+    @Transactional
     public Hub addNewHub(final HubDto hubDto, String userId) {
         Hub hubEntity = Hub.builder()
                 .name(hubDto.getName())

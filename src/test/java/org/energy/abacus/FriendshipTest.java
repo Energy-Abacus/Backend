@@ -6,6 +6,7 @@ import io.quarkus.test.security.oidc.Claim;
 import io.quarkus.test.security.oidc.OidcSecurity;
 import io.quarkus.test.security.oidc.UserInfo;
 import org.energy.abacus.dtos.FriendshipDto;
+import org.energy.abacus.dtos.FriendshipReactionDto;
 import org.energy.abacus.dtos.UserDto;
 import org.energy.abacus.dtos.UserFriendDto;
 import org.energy.abacus.entities.Friendship;
@@ -94,7 +95,7 @@ class FriendshipTest {
                 .then()
                 .statusCode(200);
 
-        friendshipService.reactionByReceiver(true, "test|2", "test|1");
+        friendshipService.reactionByReceiver(new FriendshipReactionDto("test|2", true), "test|1");
         Friendship[] friends = given().get("/api/v1/friendship")
                 .then()
                 .statusCode(200)
@@ -121,7 +122,7 @@ class FriendshipTest {
                 .then()
                 .statusCode(200);
 
-        friendshipService.reactionByReceiver(false, "test|2", "test|1");
+        friendshipService.reactionByReceiver(new FriendshipReactionDto("test|2", false), "test|1");
         Friendship[] friends = given().get("/api/v1/friendship")
                 .then()
                 .statusCode(200)
@@ -145,7 +146,7 @@ class FriendshipTest {
                 .then()
                 .statusCode(200);
 
-        friendshipService.reactionByReceiver(true, "test|2", "test|1");
+        friendshipService.reactionByReceiver(new FriendshipReactionDto("test|2", true), "test|1");
         Friendship[] friends = given().get("/api/v1/friendship")
                 .then()
                 .statusCode(200)
@@ -192,7 +193,7 @@ class FriendshipTest {
                 .then()
                 .statusCode(200);
 
-        friendshipService.reactionByReceiver(true, "auth0|648f2a5f8b85c8a6949f4b74", "test|1");
+        friendshipService.reactionByReceiver(new FriendshipReactionDto("auth0|648f2a5f8b85c8a6949f4b74", true), "test|1");
 
         UserFriendDto[] users = given().get("/api/v1/friendship/friend-details")
                 .then()
