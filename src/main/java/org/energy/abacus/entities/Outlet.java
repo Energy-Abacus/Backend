@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.Set;
 
 @Entity
 @Getter
@@ -12,11 +11,9 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@NamedQueries({
-        @NamedQuery(name = "findOutletByIdentifier", query = "SELECT o FROM Outlet o WHERE o.outletIdentifier = :outletIdentifier AND o.hubId = :hubId"),
-        @NamedQuery(name = "findOutletsByHubId", query = "SELECT o FROM Outlet o WHERE o.hubId = :hubId"),
-        @NamedQuery(name = "findOutletByIdAndUser", query = "SELECT o FROM Outlet o WHERE o.id = :outletId AND o.hub.userid = :userId")
-})
+@NamedQuery(name = "findOutletByIdentifier", query = "SELECT o FROM Outlet o WHERE o.outletIdentifier = :outletIdentifier AND o.hubId = :hubId")
+@NamedQuery(name = "findOutletsByHubId", query = "SELECT o FROM Outlet o WHERE o.hubId = :hubId")
+@NamedQuery(name = "findOutletByIdAndUser", query = "SELECT o FROM Outlet o WHERE o.id = :outletId AND o.hub.userid = :userId")
 public class Outlet {
 
     //Fields

@@ -10,14 +10,11 @@ import io.quarkus.test.security.oidc.Claim;
 import io.quarkus.test.security.oidc.OidcSecurity;
 import io.quarkus.test.security.oidc.UserInfo;
 import org.energy.abacus.entities.Hub;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.InfluxDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-
-import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
@@ -25,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
 @Testcontainers
-class MeasurementResourceTest {
+class MeasurementTest {
 
     final PortBinding portBinding = new PortBinding(Ports.Binding.bindPort(8086), new ExposedPort(8086));
 
@@ -59,7 +56,7 @@ class MeasurementResourceTest {
                 .post("/api/v1/outlet")
                 .then().statusCode(200).extract().body().as(Integer.class);
 
-        double totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\", \"from\": 1646310120, \"to\": 1646316000}")
+        double totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\"}")
                 .header("Content-Type", "application/json")
                 .when()
                 .get("/api/v1/measurement/total")
@@ -79,7 +76,7 @@ class MeasurementResourceTest {
                     .body("$.size()", is(1),
                         "[0].temperature", is(20.0F));
 
-        totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\", \"from\": 1646310120, \"to\": 1646316000}")
+        totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\"}")
                 .header("Content-Type", "application/json")
                 .when()
                 .get("/api/v1/measurement/total")
@@ -94,7 +91,7 @@ class MeasurementResourceTest {
                 .post("/api/v1/measurement")
                 .then().statusCode(204);
 
-        totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\", \"from\": 1646310120, \"to\": 1646316000}")
+        totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\"}")
                 .header("Content-Type", "application/json")
                 .when()
                 .get("/api/v1/measurement/total")

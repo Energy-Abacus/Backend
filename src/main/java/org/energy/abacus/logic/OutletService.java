@@ -41,15 +41,19 @@ public class OutletService {
     public Collection<Outlet> getAllOutletsForHub(int hubId, String userId) {
         Hub hub = hubService.getHubById(hubId, userId);
         return hub.getOutlets();
-        /*return entityManager.createNamedQuery("findOutletsByHubId", Outlet.class)
-                .setParameter("hubId", hubId)
-                .getResultList();*/
     }
 
     public boolean outletBelongsToUser(int outletId, String userId) {
+        return !entityManager.createNamedQuery("findOutletByIdAndUser", Outlet.class)
+                .setParameter("outletId", outletId)
+                .setParameter("userId", userId)
+                .getResultList().isEmpty();
+    }
+
+    public Outlet getOutletById(int outletId, String userId) {
         return entityManager.createNamedQuery("findOutletByIdAndUser", Outlet.class)
                 .setParameter("outletId", outletId)
                 .setParameter("userId", userId)
-                .getResultList().size() > 0;
+                .getSingleResult();
     }
 }

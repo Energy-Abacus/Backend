@@ -14,7 +14,7 @@ import java.time.Instant;
 @Measurement(name = "data")
 public class Data {
 
-    @Column(name = "timeStamp", timestamp = true)
+    @Column(name = "time", timestamp = true)
     private Instant timeStamp;
 
     @Column(name = "wattPower")

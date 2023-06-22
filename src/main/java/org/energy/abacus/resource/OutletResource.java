@@ -42,4 +42,11 @@ public class OutletResource {
     public Collection<Outlet> getAllOutlets(@QueryParam("hubId") int hubId) {
         return outletService.getAllOutletsForHub(hubId, userId);
     }
+
+    @GET
+    @Authenticated
+    @Path("{id}")
+    public Outlet getOutlet(@PathParam("id") int outletId) {
+        return outletService.getOutletById(outletId, userId);
+    }
 }

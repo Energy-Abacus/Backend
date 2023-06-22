@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class HubDto {
-
-    private String name;
-
+public class FriendshipReactionDto {
+    private String sender;
+    private boolean accept;
 }

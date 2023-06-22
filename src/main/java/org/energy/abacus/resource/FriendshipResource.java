@@ -1,25 +1,24 @@
 package org.energy.abacus.resource;
 
 import io.quarkus.security.Authenticated;
-import lombok.extern.java.Log;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
+import org.energy.abacus.dtos.FriendshipReactionDto;
 import org.energy.abacus.dtos.UserDto;
+import org.energy.abacus.dtos.UserFriendDto;
 import org.energy.abacus.entities.Friendship;
 import org.energy.abacus.logic.FriendshipService;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import java.util.Collection;
 
 @Path("/api/v1/friendship")
+@Produces("application/json")
+@Consumes("application/json")
 @RequestScoped
-@Log
 public class FriendshipResource {
 
     @Inject
@@ -40,11 +39,8 @@ public class FriendshipResource {
     @Path("/reaction")
     @Authenticated
     @Transactional
-    public int update(
-            @QueryParam("receiver") String receiver,
-            @QueryParam("accept") boolean reaction
-    ) {
-        return service.reactionByReceiver(reaction,receiver,userId);
+    public int update(FriendshipReactionDto dto) {
+        return service.reactionByReceiver(dto, userId);
     }
 
     @GET
@@ -52,6 +48,13 @@ public class FriendshipResource {
     @Transactional
     public Collection<Friendship> getAll() {
         return service.getFriendshipList(userId);
+    }
+
+    @GET
+    @Authenticated
+    @Path("/friend-details")
+    public Collection<UserFriendDto> getAllUserProfiles() {
+        return service.getAllUserProfiles(userId);
     }
 
     @GET

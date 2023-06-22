@@ -12,11 +12,9 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@NamedQueries({
-        @NamedQuery(name = "findHubByToken", query = "SELECT h FROM Hub h WHERE h.postToken = :token"),
-        @NamedQuery(name = "findHubById", query = "SELECT h FROM Hub h WHERE h.id = :id"),
-        @NamedQuery(name = "findHubsByUserId", query = "SELECT h FROM Hub h WHERE h.userid = :userId"),
-})
+@NamedQuery(name = "findHubByToken", query = "SELECT h FROM Hub h WHERE h.postToken = :token")
+@NamedQuery(name = "findHubById", query = "SELECT h FROM Hub h WHERE h.id = :id")
+@NamedQuery(name = "findHubsByUserId", query = "SELECT h FROM Hub h WHERE h.userid = :userId")
 public class Hub {
 
     @Id
