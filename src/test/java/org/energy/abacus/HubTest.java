@@ -19,7 +19,7 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
-public class HubTest {
+class HubTest {
 
     @Inject
     EntityManager entityManager;
