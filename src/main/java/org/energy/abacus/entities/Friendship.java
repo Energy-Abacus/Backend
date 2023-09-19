@@ -15,6 +15,7 @@ import javax.persistence.*;
 @NamedQuery(name = "updateFriendshipByUsers", query = "UPDATE Friendship SET accepted = :reaction WHERE requestReceiverId = :receiver AND requestSenderId = :sender")
 @NamedQuery(name = "deleteFriendshipByUsers", query = "DELETE FROM Friendship WHERE requestReceiverId = :receiver AND requestSenderId = :sender")
 @NamedQuery(name = "findFriendshipUsers", query = "SELECT f FROM Friendship f WHERE f.requestReceiverId = :id OR f.requestSenderId = :id")
+@NamedQuery(name = "deleteFriendshipByIdAndUser", query = "DELETE FROM Friendship WHERE id = :id AND (requestReceiverId = :userId OR requestSenderId = :userId)")
 public class Friendship {
 
     @Id

@@ -43,6 +43,14 @@ public class FriendshipResource {
         return service.reactionByReceiver(dto, userId);
     }
 
+    @DELETE
+    @Path("/{id}")
+    @Authenticated
+    @Transactional
+    public int delete(@PathParam("id") int id) {
+        return service.deleteFriendship(id, userId);
+    }
+
     @GET
     @Authenticated
     @Transactional
