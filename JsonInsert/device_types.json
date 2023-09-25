@@ -1,7 +1,62 @@
 [
     {
         "expectedConsumption": 58.6,
-        "icon": "watch-tv.png",
+        "icon": "tv.png",
         "name": "Television"
+    },
+    {
+        "expectedConsumption": 350,
+        "icon": "pc.png",
+        "name": "Desktop"
+    },
+    {
+        "expectedConsumption": 50,
+        "icon": "laptop.png",
+        "name": "Laptop"
+    },
+    {
+        "expectedConsumption": 850,
+        "icon": "washing-machine.png",
+        "name": "Washing Machine"
+    },
+    {
+        "expectedConsumption": 3000,
+        "icon": "tumble-dryer.png",
+        "name": "Dryer"
+    },
+    {
+        "expectedConsumption": 3000,
+        "icon": "tumble-dryer.png",
+        "name": "Dryer"
+    },
+    {
+        "expectedConsumption": 5.45,
+        "icon": "tablet.png",
+        "name": "Mobile Devices"
+    },
+    {
+        "expectedConsumption": 1800,
+        "icon": "dishwasher.png",
+        "name": "Dishwasher"
+    },
+    {
+        "expectedConsumption": 1750,
+        "icon": "hairdryer.png",
+        "name": "Hairdryer"
+    },
+    {
+        "expectedConsumption": 1500,
+        "icon": "vacuum.png",
+        "name": "Vacuum Cleaner"
+    },
+    {
+        "expectedConsumption": 850,
+        "icon": "coffee-machine.png",
+        "name": "Coffee Machine"
+    },
+    {
+        "expectedConsumption": 180,
+        "icon": "Refrigerator.png",
+        "name": "Refrigerator"
     }
 ]
