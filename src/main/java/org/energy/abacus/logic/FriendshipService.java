@@ -108,17 +108,18 @@ public class FriendshipService {
 
         Stream<UserFriendDto> outgoing = friendships.stream()
                 .filter(f -> !f.getRequestReceiverId().equals(userId))
-                .map(f -> getUserFriendProfile(getUserById(f.getRequestReceiverId()), true, f.isAccepted()));
+                .map(f -> getUserFriendProfile(getUserById(f.getRequestReceiverId()), f.getId(), true, f.isAccepted()));
 
         Stream<UserFriendDto> ingoing = friendships.stream()
                 .filter(f -> !f.getRequestSenderId().equals(userId))
-                .map(f -> getUserFriendProfile(getUserById(f.getRequestSenderId()), false, f.isAccepted()));
+                .map(f -> getUserFriendProfile(getUserById(f.getRequestSenderId()), f.getId(), false, f.isAccepted()));
 
         return Stream.concat(outgoing, ingoing).toList();
     }
 
-    private UserFriendDto getUserFriendProfile(UserDto userDto, boolean outgoing, boolean accepted){
+    private UserFriendDto getUserFriendProfile(UserDto userDto, int friendshipId, boolean outgoing, boolean accepted){
         return UserFriendDto.builder()
+                .friendshipId(friendshipId)
                 .userId(userDto.getUser_id())
                 .username(userDto.getUsername())
                 .picture(userDto.getPicture())
