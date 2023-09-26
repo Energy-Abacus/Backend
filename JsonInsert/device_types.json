@@ -25,11 +25,6 @@
         "name": "Dryer"
     },
     {
-        "expectedConsumption": 3000,
-        "icon": "tumble-dryer.png",
-        "name": "Dryer"
-    },
-    {
         "expectedConsumption": 5.45,
         "icon": "tablet.png",
         "name": "Mobile Devices"
