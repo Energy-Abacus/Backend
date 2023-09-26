@@ -89,6 +89,14 @@ public class FriendshipService {
         return 0;
     }
 
+    @Transactional
+    public int deleteFriendship(int friendShipId, String userId){
+        return entityManager.createNamedQuery("deleteFriendshipByIdAndUser")
+                .setParameter("id", friendShipId)
+                .setParameter("userId", userId)
+                .executeUpdate();
+    }
+
     public Collection<Friendship> getFriendshipList(String userId){
         return entityManager.createNamedQuery("findFriendshipUsers",Friendship.class)
                 .setParameter("id", userId)
