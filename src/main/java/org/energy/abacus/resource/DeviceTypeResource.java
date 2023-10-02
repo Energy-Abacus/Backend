@@ -1,7 +1,5 @@
 package org.energy.abacus.resource;
 
-import org.eclipse.microprofile.jwt.Claim;
-import org.eclipse.microprofile.jwt.Claims;
 import org.energy.abacus.entities.DeviceType;
 import org.energy.abacus.logic.DeviceTypeService;
 
