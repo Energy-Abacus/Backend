@@ -18,11 +18,8 @@ import java.util.Collection;
 public class DeviceTypeResource {
 
     @Inject
-    @Claim(standard = Claims.sub)
-    String userId;
-
-    @Inject
     DeviceTypeService service;
+
     @GET
     public Collection<DeviceType> getAll(){return service.getDeviceTypeList();}
 }

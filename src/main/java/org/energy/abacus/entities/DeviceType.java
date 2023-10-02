@@ -11,6 +11,8 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+
+@NamedQuery(name = "findAllDeviceTypes", query = "SELECT d FROM DeviceType d")
 public class DeviceType {
 
     @Id
