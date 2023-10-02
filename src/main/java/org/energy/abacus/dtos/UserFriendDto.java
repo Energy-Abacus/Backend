@@ -8,6 +8,7 @@ import lombok.Getter;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserFriendDto {
+    private int friendshipId;
     private String userId;
     private String username;
     private String picture;
