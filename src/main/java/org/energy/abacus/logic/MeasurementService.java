@@ -8,6 +8,7 @@ import com.influxdb.client.WriteApi;
 import com.influxdb.client.domain.WritePrecision;
 import com.influxdb.query.FluxTable;
 import com.influxdb.query.dsl.Flux;
+import com.influxdb.query.dsl.functions.RangeFlux;
 import com.influxdb.query.dsl.functions.restriction.Restrictions;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -92,14 +93,14 @@ public class MeasurementService {
             throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
         }
 
-        String temperatureByLocationQuery = Flux.from(bucketName)
+        String measurementsInTimeframeQuery = Flux.from(bucketName)
                 .range(Instant.ofEpochSecond(from), Instant.ofEpochSecond(to))
                 .filter(Restrictions
                         .and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
                 .pivot(new String[] { "_time" }, new String[] { "_field" }, "_value")
                 .toString();
         QueryApi queryApi = influxDBClient.getQueryApi();
-        return queryApi.query(temperatureByLocationQuery, Data.class);
+        return queryApi.query(measurementsInTimeframeQuery, Data.class);
     }
 
     public double getTotalPowerUsed(GetTotalPowerUsedDto dto) {
@@ -120,5 +121,38 @@ public class MeasurementService {
         QueryApi queryApi = influxDBClient.getQueryApi();
         List<FluxTable> results = queryApi.query(totalPowerUsedQuery);
         return results.isEmpty() ? 0 : (double) results.get(0).getRecords().get(0).getValueByKey("_value");
+    }
+
+    public double getTotalPowerUsedByUser(String userId) {
+        return this.getTotalPowerUsedByUser(Flux.from(bucketName).range(DATA_RETENTION_DAYS, ChronoUnit.DAYS), userId);
+    }
+
+    public double getTotalPowerUsedByUserBetween(long start, long end, String userId) {
+        double totalPowerStart = this.getTotalPowerUsedByUser(Flux.from(bucketName).range(
+            Instant.now().minus(DATA_RETENTION_DAYS, ChronoUnit.DAYS), Instant.ofEpochSecond(start)
+        ), userId);
+        double totalPowerEnd = this.getTotalPowerUsedByUser(Flux.from(bucketName).range(
+                Instant.now().minus(DATA_RETENTION_DAYS, ChronoUnit.DAYS), Instant.ofEpochSecond(end)
+        ), userId);
+        return totalPowerEnd - totalPowerStart;
+    }
+
+    private double getTotalPowerUsedByUser(RangeFlux rangeFlux, String userId) {
+        QueryApi queryApi = influxDBClient.getQueryApi();
+        String[] outletIds = outletService.getOutletIdsByUser(userId).stream().map(String::valueOf).toArray(String[]::new);
+
+        String totalPowerByUserQuery = rangeFlux
+                .filter(Restrictions.and(Restrictions.column("_field").equal("totalPowerUsed")))
+                .filter(Restrictions.and(Restrictions.tag("outletId").contains(outletIds)))
+                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
+                .last()
+                .toString();
+
+        double totalPowerUsed = 0;
+        for (var result : queryApi.query(totalPowerByUserQuery)) {
+            totalPowerUsed += (double) result.getRecords().get(0).getValueByKey("_value");
+        }
+
+        return totalPowerUsed;
     }
 }

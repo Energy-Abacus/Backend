@@ -9,6 +9,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import java.util.Collection;
+import java.util.List;
 
 @ApplicationScoped
 @Log
@@ -55,5 +56,11 @@ public class OutletService {
                 .setParameter("outletId", outletId)
                 .setParameter("userId", userId)
                 .getSingleResult();
+    }
+
+    public List<Integer> getOutletIdsByUser(String userId) {
+        return entityManager.createNamedQuery("findOutletIdsByUser", Integer.class)
+                .setParameter("userId", userId)
+                .getResultList();
     }
 }
