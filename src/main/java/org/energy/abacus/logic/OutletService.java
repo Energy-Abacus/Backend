@@ -56,4 +56,13 @@ public class OutletService {
                 .setParameter("userId", userId)
                 .getSingleResult();
     }
+
+    public Outlet updateOutlet(OutletDto outlet, String userId) {
+        Outlet oldOutlet = getOutlet(outlet.getOutletIdentifier(), outlet.getHubId());
+        oldOutlet.setName(outlet.getName());
+        oldOutlet.setHub(hubService.getHubById(outlet.getHubId(), userId));
+        oldOutlet.setDeviceTypes(outlet.getDeviceTypes());
+
+        return entityManager.merge(oldOutlet);
+    }
 }

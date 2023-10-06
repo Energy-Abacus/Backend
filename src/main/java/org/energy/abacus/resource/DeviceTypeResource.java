@@ -1,13 +1,11 @@
 package org.energy.abacus.resource;
 
+import io.quarkus.security.Authenticated;
 import org.energy.abacus.entities.DeviceType;
 import org.energy.abacus.logic.DeviceTypeService;
 
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import java.util.Collection;
 
 @Path("/api/v1/device-type")
@@ -18,6 +16,8 @@ public class DeviceTypeResource {
     @Inject
     DeviceTypeService service;
 
+    @Authenticated
     @GET
     public Collection<DeviceType> getAll(){return service.getDeviceTypeList();}
+
 }
