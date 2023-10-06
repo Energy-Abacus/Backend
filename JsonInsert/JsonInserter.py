@@ -1,10 +1,11 @@
 import mysql.connector
 import json
+import os
 
-host = "localhost"
-user = "root"
-password = "123"
-database = "quarkus"
+host = os.getenv("mysql-url")
+user = os.getenv("mysql-user")
+password = os.getenv("mysql-password")
+database = os.getenv("mysql-database")
 
 with open("device_types.json", "r") as json_file:
     device_types_data = json.load(json_file)
