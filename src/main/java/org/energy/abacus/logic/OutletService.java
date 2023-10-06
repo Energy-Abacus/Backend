@@ -60,11 +60,10 @@ public class OutletService {
 
     public Outlet updateOutlet(OutletDto outlet, String userId) {
         return Stream.of(getOutlet(outlet.getOutletIdentifier(), outlet.getHubId()))
-                .map(oldOutlet -> {
+                .peek(oldOutlet -> {
                     oldOutlet.setName(outlet.getName());
                     oldOutlet.setHub(hubService.getHubById(outlet.getHubId(), userId));
                     oldOutlet.setDeviceTypes(outlet.getDeviceTypes());
-                    return oldOutlet;
                 })
                 .findFirst()
                 .map(entityManager::merge)
