@@ -62,7 +62,6 @@ public class OutletService {
         return Stream.of(getOutlet(outlet.getOutletIdentifier(), outlet.getHubId()))
                 .map(oldOutlet -> {
                     oldOutlet.setName(outlet.getName());
-                    oldOutlet.setHubId(outlet.getHubId());
                     oldOutlet.setHub(hubService.getHubById(outlet.getHubId(), userId));
                     oldOutlet.setDeviceTypes(outlet.getDeviceTypes());
                     return oldOutlet;
