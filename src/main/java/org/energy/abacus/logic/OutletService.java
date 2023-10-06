@@ -9,6 +9,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import java.util.Collection;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 @Log
@@ -58,11 +59,16 @@ public class OutletService {
     }
 
     public Outlet updateOutlet(OutletDto outlet, String userId) {
-        Outlet oldOutlet = getOutlet(outlet.getOutletIdentifier(), outlet.getHubId());
-        oldOutlet.setName(outlet.getName());
-        oldOutlet.setHub(hubService.getHubById(outlet.getHubId(), userId));
-        oldOutlet.setDeviceTypes(outlet.getDeviceTypes());
-
-        return entityManager.merge(oldOutlet);
+        return Stream.of(getOutlet(outlet.getOutletIdentifier(), outlet.getHubId()))
+                .map(oldOutlet -> {
+                    oldOutlet.setName(outlet.getName());
+                    oldOutlet.setHubId(outlet.getHubId());
+                    oldOutlet.setHub(hubService.getHubById(outlet.getHubId(), userId));
+                    oldOutlet.setDeviceTypes(outlet.getDeviceTypes());
+                    return oldOutlet;
+                })
+                .findFirst()
+                .map(entityManager::merge)
+                .orElse(null);
     }
 }
