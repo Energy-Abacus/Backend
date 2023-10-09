@@ -23,6 +23,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -46,19 +47,34 @@ public class FriendshipService {
     @ConfigProperty(name = "auth0.management-api-audience")
     String audience;
     String token;
+    Long expireAt;
 
     @PostConstruct
     public void initializeAuth0Api() throws IOException, InterruptedException {
-        HttpClient client = HttpClient.newHttpClient();
+        fetchAuth0Token();
+    }
+
+    private String getAuth0Token() throws IOException, InterruptedException {
+        if (Instant.now().getEpochSecond() >= expireAt) {
+            fetchAuth0Token();
+        }
+        return token;
+    }
+
+    private void fetchAuth0Token() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .headers("Content-Type", "application/x-www-form-urlencoded")
                 .uri(URI.create(domain + "/oauth/token"))
                 .POST(HttpRequest.BodyPublishers.ofString("&audience=" + audience + "&client_id=" + clientId + "&client_secret=" + clientSecret
                         + "&grant_type=client_credentials"))
                 .build();
-        HttpResponse<String> response = client.send(request,HttpResponse.BodyHandlers.ofString());
+        HttpClient client = HttpClient.newHttpClient();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         final ObjectNode node = objectMapper.readValue(response.body(), ObjectNode.class);
+
         token = node.get("access_token").asText();
+        final long expiresIn = node.get("expires_in").asLong();
+        expireAt = Instant.now().getEpochSecond() + expiresIn;
     }
 
     public int addNewFriend(String receiver, String sender){
@@ -130,13 +146,13 @@ public class FriendshipService {
 
     private UserDto getUserById(String userId) {
         HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .headers("authorization", "Bearer " + token)
-                .uri(URI.create(domain + "/api/v2/users/" + URLEncoder.encode(userId, StandardCharsets.UTF_8)))
-                .GET()
-                .build();
-
         try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .headers("authorization", "Bearer " + getAuth0Token())
+                    .uri(URI.create(domain + "/api/v2/users/" + URLEncoder.encode(userId, StandardCharsets.UTF_8)))
+                    .GET()
+                    .build();
+
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             return objectMapper.readValue(response.body(), UserDto.class);
         } catch (IOException | InterruptedException e) {
@@ -154,13 +170,13 @@ public class FriendshipService {
         }
 
         HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .headers("authorization", "Bearer " + token)
-                .uri(URI.create(domain + "/api/v2/users?search_engine=v3&q=username:*" + chars + "*"))
-                .GET()
-                .build();
-
         try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .headers("authorization", "Bearer " + getAuth0Token())
+                    .uri(URI.create(domain + "/api/v2/users?search_engine=v3&q=username:*" + chars + "*"))
+                    .GET()
+                    .build();
+
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             UserDto[] users = objectMapper.readValue(response.body(), UserDto[].class);
             return Arrays.asList(users);
