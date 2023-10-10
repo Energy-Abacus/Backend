@@ -4,6 +4,7 @@ package org.energy.abacus.entities;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Builder
@@ -27,4 +28,10 @@ public class DeviceType {
     @Lob
     @Basic(fetch = FetchType.LAZY)
     private byte[] icon;
+
+    @ManyToMany(
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY
+    )
+    private List<Outlet> outlets;
 }

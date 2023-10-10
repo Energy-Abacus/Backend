@@ -34,7 +34,7 @@ public class Outlet {
 
     @ManyToMany(
             cascade = CascadeType.ALL,
-            mappedBy = "outlet",
+            mappedBy = "outlets",
             fetch = FetchType.LAZY
     )
     private List<DeviceType> deviceTypes;
