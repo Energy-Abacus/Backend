@@ -1,5 +1,6 @@
 package org.energy.abacus.resource;
 
+import io.quarkus.security.Authenticated;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
@@ -19,7 +20,6 @@ import java.util.Collection;
 @Consumes(MediaType.APPLICATION_JSON)
 
 @Log
-
 @Path("/api/v1/measurement")
 @RequestScoped
 public class MeasurementResource {
@@ -38,12 +38,30 @@ public class MeasurementResource {
     }
 
     @GET
-    @Path("/total")
+    @Path("/total-power-plug")
     public double getTotalPowerUsed(final GetTotalPowerUsedDto dto) {
         return measurementService.getTotalPowerUsed(dto);
     }
 
     @GET
+    @Authenticated
+    @Path("/total-power-user")
+    public double getTotalPowerUsedByUser() {
+        return measurementService.getTotalPowerUsedByUser(this.userId);
+    }
+
+    @GET
+    @Authenticated
+    @Path("/total-power-user-between")
+    public double getTotalPowerByUserBetween(
+            @QueryParam("from") long from,
+            @QueryParam("to") long to
+    ) {
+        return measurementService.getTotalPowerUsedByUserBetween(from, to, this.userId);
+    }
+
+    @GET
+    @Authenticated
     public Collection<Data> getMeasurementsByOutletId(
             @QueryParam("outletId") int outletId,
             @QueryParam("from") long from,
