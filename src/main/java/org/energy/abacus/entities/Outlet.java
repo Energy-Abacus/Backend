@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Getter
@@ -31,6 +32,13 @@ public class Outlet {
 
     @Column(name = "hubId", insertable = false, updatable = false)
     private int hubId;
+
+    @ManyToMany(
+            cascade = CascadeType.ALL,
+            mappedBy = "outlets",
+            fetch = FetchType.LAZY
+    )
+    private List<DeviceType> deviceTypes;
 
     @ManyToOne
     @JoinColumn(name = "hubId")

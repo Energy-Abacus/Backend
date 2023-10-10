@@ -43,6 +43,11 @@ public class OutletResource {
         return outletService.getAllOutletsForHub(hubId, userId);
     }
 
+    @PUT
+    @Authenticated
+    public Outlet updateOutlet(final OutletDto outlet) {
+        return outletService.updateOutlet(outlet, userId);
+    }
     @GET
     @Authenticated
     @Path("{id}")
