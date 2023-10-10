@@ -59,9 +59,13 @@ class MeasurementTest {
         double totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\"}")
                 .header("Content-Type", "application/json")
                 .when()
-                .get("/api/v1/measurement/total")
+                .get("/api/v1/measurement/total-power-plug")
+                .then().statusCode(200).extract().body().as(Double.class);
+        double totalPowerUsedByUser = given().when()
+                .get("/api/v1/measurement/total-power-user")
                 .then().statusCode(200).extract().body().as(Double.class);
         assertEquals(0.0, totalPowerUsed);
+        assertEquals(0.0, totalPowerUsedByUser);
 
         given().body("{\"postToken\": \"" + hub.getPostToken() + "\", \"timeStamp\": 1646311120, \"powerOn\": \"true\", \"wattPower\": 0, \"totalPowerUsed\": " + (totalPowerUsed + 5.0) + ", \"temperature\": 20.0, \"outletIdentifier\": \"shelly-1234\"}")
                 .header("Content-Type", "application/json")
@@ -79,11 +83,14 @@ class MeasurementTest {
         totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\"}")
                 .header("Content-Type", "application/json")
                 .when()
-                .get("/api/v1/measurement/total")
+                .get("/api/v1/measurement/total-power-plug")
+                .then().statusCode(200).extract().body().as(Double.class);
+        totalPowerUsedByUser = given().when()
+                .get("/api/v1/measurement/total-power-user")
                 .then().statusCode(200).extract().body().as(Double.class);
 
-        System.out.println("Alo: " + totalPowerUsed);
         assertEquals(5.0, totalPowerUsed);
+        assertEquals(5.0, totalPowerUsedByUser);
 
         given().body("{\"postToken\": \"" + hub.getPostToken() + "\", \"timeStamp\": 1646311150, \"powerOn\": \"true\", \"wattPower\": 0, \"totalPowerUsed\": " + (totalPowerUsed + 2.0) + ", \"temperature\": 21.0, \"outletIdentifier\": \"shelly-1234\"}")
                 .header("Content-Type", "application/json")
@@ -94,9 +101,13 @@ class MeasurementTest {
         totalPowerUsed = given().body("{\"outletIdentifier\": \"shelly-1234\", \"postToken\": \"" + hub.getPostToken() + "\"}")
                 .header("Content-Type", "application/json")
                 .when()
-                .get("/api/v1/measurement/total")
+                .get("/api/v1/measurement/total-power-plug")
+                .then().statusCode(200).extract().body().as(Double.class);
+        totalPowerUsedByUser = given().when()
+                .get("/api/v1/measurement/total-power-user")
                 .then().statusCode(200).extract().body().as(Double.class);
 
         assertEquals(7.0, totalPowerUsed);
+        assertEquals(7.0, totalPowerUsedByUser);
     }
 }
