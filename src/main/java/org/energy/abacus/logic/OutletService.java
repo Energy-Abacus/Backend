@@ -8,6 +8,7 @@ import org.energy.abacus.entities.Outlet;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.ws.rs.NotAllowedException;
 import java.util.Collection;
 import java.util.List;
 
@@ -58,8 +59,13 @@ public class OutletService {
                 .getSingleResult();
     }
 
-    public Outlet updateOutlet(OutletDto outlet, String userId) {
-        Outlet oldOutlet = getOutlet(outlet.getOutletIdentifier(), outlet.getHubId());
+    public Outlet updateOutlet(OutletDto outlet, int outletId, String userId) {
+        Outlet oldOutlet = getOutletById(outletId, userId);
+
+        if (oldOutlet == null) {
+            throw new NotAllowedException("Outlet does not belong to user");
+        }
+
         oldOutlet.setName(outlet.getName());
         oldOutlet.setHub(hubService.getHubById(outlet.getHubId(), userId));
         oldOutlet.setDeviceTypes(outlet.getDeviceTypes());
