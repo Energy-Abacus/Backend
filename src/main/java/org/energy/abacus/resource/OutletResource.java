@@ -44,9 +44,10 @@ public class OutletResource {
     }
 
     @PUT
+    @Path("{id}")
     @Authenticated
-    public Outlet updateOutlet(final OutletDto outlet) {
-        return outletService.updateOutlet(outlet, userId);
+    public Outlet updateOutlet(final OutletDto outlet, @PathParam("id") int outletId) {
+        return outletService.updateOutlet(outlet, outletId, userId);
     }
     @GET
     @Authenticated
