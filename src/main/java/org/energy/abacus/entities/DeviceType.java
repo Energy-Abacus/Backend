@@ -14,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 
 @NamedQuery(name = "findAllDeviceTypes", query = "SELECT d FROM DeviceType d")
+@NamedQuery(name = "findAllDeviceTypesById", query = "SELECT d FROM DeviceType d WHERE d.id IN :ids")
 public class DeviceType {
 
     @Id

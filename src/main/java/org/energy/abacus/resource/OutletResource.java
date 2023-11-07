@@ -43,6 +43,12 @@ public class OutletResource {
         return outletService.getAllOutletsForHub(hubId, userId);
     }
 
+    @GET
+    @Path("by-hub")
+    public Collection<String> getOutletIdentifiers(@QueryParam("postToken") String postToken) {
+        return outletService.getOutletIdentifiersByHub(postToken);
+    }
+
     @PUT
     @Path("{id}")
     @Authenticated
