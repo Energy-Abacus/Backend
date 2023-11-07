@@ -21,6 +21,8 @@ public class OutletService {
 
     @Inject
     HubService hubService;
+    @Inject
+    DeviceTypeService deviceTypeService;
 
     public int addNewOutlet(final OutletDto outletDTO, String userId) {
         Hub hub = hubService.getHubById(outletDTO.getHubId(), userId);
@@ -68,9 +70,19 @@ public class OutletService {
 
         oldOutlet.setName(outlet.getName());
         oldOutlet.setHub(hubService.getHubById(outlet.getHubId(), userId));
-        oldOutlet.setDeviceTypes(outlet.getDeviceTypes());
+        oldOutlet.setDeviceTypes(deviceTypeService.getDeviceTypesById(outlet.getDeviceTypeIds()));
 
         return entityManager.merge(oldOutlet);
+    }
+
+    public List<String> getOutletIdentifiersByHub(String postToken) {
+        Hub hub = hubService.getHubByToken(postToken);
+
+        if (hub == null) {
+            throw new NotAllowedException("Wrong token!");
+        }
+
+        return hub.getOutlets().stream().map(Outlet::getOutletIdentifier).toList();
     }
 
     public List<Integer> getOutletIdsByUser(String userId) {
