@@ -10,5 +10,5 @@ public class OutletDto {
     private String name;
     private String outletIdentifier;
     private int hubId;
-    private List<DeviceType> deviceTypes;
+    private List<Long> deviceTypeIds;
 }
