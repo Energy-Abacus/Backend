@@ -8,6 +8,7 @@ import org.energy.abacus.entities.Outlet;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 import javax.ws.rs.NotAllowedException;
 import java.util.Collection;
 import java.util.List;
@@ -61,6 +62,7 @@ public class OutletService {
                 .getSingleResult();
     }
 
+    @Transactional
     public Outlet updateOutlet(OutletDto outlet, int outletId, String userId) {
         Outlet oldOutlet = getOutletById(outletId, userId);
 
