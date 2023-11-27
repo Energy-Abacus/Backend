@@ -103,17 +103,33 @@ public class MeasurementService {
         return queryApi.query(measurementsInTimeframeQuery, Data.class);
     }
 
-    public double getTotalPowerUsed(GetTotalPowerUsedDto dto) {
+    public double getTotalPowerUsedByOutletWithPostToken(GetTotalPowerUsedDto dto) {
         Hub hub = hubService.getHubByToken(dto.getPostToken());
         if (hub == null) {
             throw new NotAllowedException("Wrong token!");
         }
         Outlet outlet = outletService.getOutlet(dto.getOutletIdentifier(), hub.getId());
+        return getTotalPowerUsedByOutlet(outlet.getId());
+    }
 
+    public double getTotalPowerUsedByOutletWithUserId(int outletId, String userId) {
+        if (!outletService.outletBelongsToUser(outletId, userId)) {
+            throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
+        }
+        return getTotalPowerUsedByOutlet(outletId);
+    }
+
+    /**
+     * Returns the total power used by an outlet
+     * DOES NOT AUTHENTICATE THE USER - USE WITH CAUTION
+     * @param outletId the id of the outlet
+     * @return the total power used by the outlet
+     */
+    private double getTotalPowerUsedByOutlet(int outletId) {
         String totalPowerUsedQuery = Flux.from(bucketName)
                 .range(DATA_RETENTION_DAYS, ChronoUnit.DAYS)
                 .filter(Restrictions
-                        .and(Restrictions.tag("outletId").equal(Integer.toString(outlet.getId())))
+                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId)))
                         .and(Restrictions.field().equal("totalPowerUsed")))
                 .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
                 .last()

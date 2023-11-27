@@ -40,7 +40,14 @@ public class MeasurementResource {
     @GET
     @Path("/total-power-plug")
     public double getTotalPowerUsed(final GetTotalPowerUsedDto dto) {
-        return measurementService.getTotalPowerUsed(dto);
+        return measurementService.getTotalPowerUsedByOutletWithPostToken(dto);
+    }
+
+    @GET
+    @Path("/total-power-plug-id")
+    @Authenticated
+    public double getTotalPowerUsed(@QueryParam("outletId") int outletId) {
+        return measurementService.getTotalPowerUsedByOutletWithUserId(outletId, this.userId);
     }
 
     @GET
