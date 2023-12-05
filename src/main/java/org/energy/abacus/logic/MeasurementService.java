@@ -17,6 +17,7 @@ import org.energy.abacus.dtos.MeasurementDto;
 import org.energy.abacus.entities.Data;
 import org.energy.abacus.entities.Hub;
 import org.energy.abacus.entities.Outlet;
+import org.jboss.resteasy.reactive.common.NotImplementedYet;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -103,6 +104,47 @@ public class MeasurementService {
         return queryApi.query(measurementsInTimeframeQuery, Data.class);
     }
 
+//    public double getAverageActivePowerUsedByOutlet(int outletId, String userId) {
+//        if (!outletService.outletBelongsToUser(outletId, userId)) {
+//            throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
+//        }
+//
+//        // https://community.influxdata.com/t/filter-data-glitches/11445
+//        throw new NotImplementedYet();
+//    }
+
+    public double getAveragePowerUsedByOutlet(int outletId, String userId) {
+        if (!outletService.outletBelongsToUser(outletId, userId)) {
+            throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
+        }
+        return getTotalPowerUsedByOutlet(outletId) / countMeasurements(Flux.from(bucketName).range(DATA_RETENTION_DAYS, ChronoUnit.DAYS), outletId, "totalPowerUsed");
+    }
+
+    public double getAveragePowerUsedByOutletBetween(int outletId, String userId, long from, long to) {
+        if (!outletService.outletBelongsToUser(outletId, userId)) {
+            throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
+        }
+        RangeFlux rangeFlux = Flux.from(bucketName).range(
+                Instant.ofEpochSecond(from), Instant.ofEpochSecond(to)
+        );
+        double totalPowerUsed = getTotalPowerUsedByOutletBetween(from, to, outletId);
+        return totalPowerUsed / countMeasurements(rangeFlux, outletId, "totalPowerUsed");
+    }
+
+    private long countMeasurements(RangeFlux flux, int outletId, String field) {
+        String countMeasurementsQuery = flux
+                .filter(Restrictions
+                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId)))
+                        .and(Restrictions.field().equal(field)))
+                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
+                .count()
+                .toString();
+
+        QueryApi queryApi = influxDBClient.getQueryApi();
+        List<FluxTable> results = queryApi.query(countMeasurementsQuery);
+        return results.isEmpty() ? 0 : (long) results.get(0).getRecords().get(0).getValueByKey("_value");
+    }
+
     public double getTotalPowerUsedByOutletWithPostToken(GetTotalPowerUsedDto dto) {
         Hub hub = hubService.getHubByToken(dto.getPostToken());
         if (hub == null) {
@@ -119,6 +161,16 @@ public class MeasurementService {
         return getTotalPowerUsedByOutlet(outletId);
     }
 
+    private double getTotalPowerUsedByOutletBetween(long start, long end, int outletId) {
+        double totalPowerStart = this.getTotalPowerUsedByOutlet(Flux.from(bucketName).range(
+                Instant.now().minus(DATA_RETENTION_DAYS, ChronoUnit.DAYS), Instant.ofEpochSecond(start)
+        ), outletId);
+        double totalPowerEnd = this.getTotalPowerUsedByOutlet(Flux.from(bucketName).range(
+                Instant.now().minus(DATA_RETENTION_DAYS, ChronoUnit.DAYS), Instant.ofEpochSecond(end)
+        ), outletId);
+        return totalPowerEnd - totalPowerStart;
+    }
+
     /**
      * Returns the total power used by an outlet
      * DOES NOT AUTHENTICATE THE USER - USE WITH CAUTION
@@ -126,12 +178,22 @@ public class MeasurementService {
      * @return the total power used by the outlet
      */
     private double getTotalPowerUsedByOutlet(int outletId) {
-        String totalPowerUsedQuery = Flux.from(bucketName)
-                .range(DATA_RETENTION_DAYS, ChronoUnit.DAYS)
+        return this.getTotalPowerUsedByOutlet(Flux.from(bucketName).range(DATA_RETENTION_DAYS, ChronoUnit.DAYS), outletId);
+    }
+
+    /**
+     * Returns the total power used by an outlet
+     * DOES NOT AUTHENTICATE THE USER - USE WITH CAUTION
+     * @param flux RangeFlux specifying the time range
+     * @param outletId the id of the outlet
+     * @return the total power used by the outlet in the given timeframe
+     */
+    private double  getTotalPowerUsedByOutlet(RangeFlux flux, int outletId) {
+        String totalPowerUsedQuery = flux
                 .filter(Restrictions
                         .and(Restrictions.tag("outletId").equal(Integer.toString(outletId)))
                         .and(Restrictions.field().equal("totalPowerUsed")))
-                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
+                .drop(new String[]{"_start", "_stop", "_field", "_measurement", "_time", "outletId"})
                 .last()
                 .toString();
         QueryApi queryApi = influxDBClient.getQueryApi();
@@ -148,7 +210,7 @@ public class MeasurementService {
             Instant.now().minus(DATA_RETENTION_DAYS, ChronoUnit.DAYS), Instant.ofEpochSecond(start)
         ), userId);
         double totalPowerEnd = this.getTotalPowerUsedByUser(Flux.from(bucketName).range(
-                Instant.now().minus(DATA_RETENTION_DAYS, ChronoUnit.DAYS), Instant.ofEpochSecond(end)
+            Instant.now().minus(DATA_RETENTION_DAYS, ChronoUnit.DAYS), Instant.ofEpochSecond(end)
         ), userId);
         return totalPowerEnd - totalPowerStart;
     }

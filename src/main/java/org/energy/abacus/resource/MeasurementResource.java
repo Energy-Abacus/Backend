@@ -51,6 +51,24 @@ public class MeasurementResource {
     }
 
     @GET
+    @Path("/avg-power-plug")
+    @Authenticated
+    public double getAvgPowerUsed(@QueryParam("outletId") int outletId) {
+        return measurementService.getAveragePowerUsedByOutlet(outletId, this.userId);
+    }
+
+    @GET
+    @Path("/avg-power-plug-between")
+    @Authenticated
+    public double getAvgPowerUsed(
+            @QueryParam("outletId") int outletId,
+            @QueryParam("from") long from,
+            @QueryParam("to") long to
+    ) {
+        return measurementService.getAveragePowerUsedByOutletBetween(outletId, this.userId, from, to);
+    }
+
+    @GET
     @Authenticated
     @Path("/total-power-user")
     public double getTotalPowerUsedByUser() {
