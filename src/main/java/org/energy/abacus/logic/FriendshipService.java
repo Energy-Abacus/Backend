@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.energy.abacus.dtos.FriendshipReactionDto;
+import org.energy.abacus.dtos.LeaderBoarPositionDto;
 import org.energy.abacus.dtos.UserDto;
 import org.energy.abacus.dtos.UserFriendDto;
 import org.energy.abacus.entities.Friendship;
@@ -26,6 +27,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -35,6 +38,9 @@ import java.util.stream.Stream;
 public class FriendshipService {
     @Inject
     EntityManager entityManager;
+
+    @Inject
+    MeasurementService measurementService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -185,6 +191,30 @@ public class FriendshipService {
             Thread.currentThread().interrupt();
             throw new InternalServerErrorException("Error while getting users from Auth0");
         }
+    }
+    public Collection<LeaderBoarPositionDto> getLeaderBoard(String userId){
+        UserDto user = getUserById(userId);
+        Collection<UserFriendDto> friends = new LinkedList<>(getAllUserProfiles(userId));
+        friends.add(UserFriendDto.builder()
+                .userId(user.getUser_id())
+                .username(user.getUsername())
+                .picture(user.getPicture())
+                .accepted(true)
+                .outgoing(true)
+                .build());
+
+        return friends.stream()
+                .filter(UserFriendDto::isAccepted)
+                .map(f -> LeaderBoarPositionDto.builder()
+                            .user(UserDto.builder()
+                                    .user_id(f.getUserId())
+                                    .username(f.getUsername())
+                                    .picture(f.getPicture())
+                                    .build())
+                            .powerUsed(measurementService.getTotalPowerUsedByUser(f.getUserId()))
+                            .build())
+                .sorted(Comparator.comparingDouble(LeaderBoarPositionDto::getPowerUsed))
+                .toList();
     }
 
     public boolean isFriend(String id, String friendId){
