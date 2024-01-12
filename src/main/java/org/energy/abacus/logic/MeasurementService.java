@@ -252,22 +252,22 @@ public class MeasurementService {
      * @return the total power used by the outlet in the given timeframe
      */
     private double getTotalPowerUsedFilteredByOutlet(RangeFlux flux, int outletId){
-        String measurementsInTimeframeQuery = Flux.from(bucketName)
+        String measurementsInTimeframeQuery = flux
                 .filter(Restrictions
                         .and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
                 .pivot(new String[] { "_time" }, new String[] { "_field" }, "_value")
                 .toString();
         QueryApi queryApi = influxDBClient.getQueryApi();
-        List<FluxTable> results = queryApi.query(measurementsInTimeframeQuery);
+        List<Data> results = queryApi.query(measurementsInTimeframeQuery, Data.class);
 
         return calculateFilteredAverage(results,0.3); //every value below 30% of the MAX value in the table are standby
     }
 
-    public static double calculateFilteredAverage(List<FluxTable> wattEntries, double deviationThreshold) {
-        double maxValue = wattEntries.stream().mapToDouble(v -> (double) v.getRecords().get(0).getValueByKey("_value"))
+    public static double calculateFilteredAverage(List<Data> wattEntries, double deviationThreshold) {
+        double maxValue = wattEntries.stream().mapToDouble(v -> v.getWattPower())
                 .max().getAsDouble();
 
-        return wattEntries.stream().mapToDouble(v -> (double) v.getRecords().get(0).getValueByKey("_value"))
+        return wattEntries.stream().mapToDouble(v -> (double) v.getWattPower())
                 .filter(value -> value > maxValue*deviationThreshold)
                 .average().getAsDouble();
     }
