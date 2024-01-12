@@ -18,6 +18,7 @@ import org.energy.abacus.entities.Data;
 import org.energy.abacus.entities.Hub;
 import org.energy.abacus.entities.Outlet;
 import org.jboss.resteasy.reactive.common.NotImplementedYet;
+import org.w3c.dom.ranges.Range;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -104,14 +105,13 @@ public class MeasurementService {
         return queryApi.query(measurementsInTimeframeQuery, Data.class);
     }
 
-//    public double getAverageActivePowerUsedByOutlet(int outletId, String userId) {
-//        if (!outletService.outletBelongsToUser(outletId, userId)) {
-//            throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
-//        }
-//
-//        // https://community.influxdata.com/t/filter-data-glitches/11445
-//        throw new NotImplementedYet();
-//    }
+    public double getAverageActivePowerUsedByOutlet(int outletId, String userId) {
+        if (!outletService.outletBelongsToUser(outletId, userId)) {
+            throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
+        }
+
+        return getTotalPowerUsedFilteredByOutlet(outletId);
+   }
 
     public double getAveragePowerUsedByOutlet(int outletId, String userId) {
         if (!outletService.outletBelongsToUser(outletId, userId)) {
@@ -232,5 +232,45 @@ public class MeasurementService {
         }
 
         return totalPowerUsed;
+    }
+
+    /**
+     * Returns the total power used excluding standby by an outlet
+     * DOES NOT AUTHENTICATE THE USER - USE WITH CAUTION
+     * @param outletId the id of the outlet
+     * @return the total power used by the outlet in the given timeframe
+     */
+    private double getTotalPowerUsedFilteredByOutlet(int outletId){
+        return this.getTotalPowerUsedFilteredByOutlet(Flux.from(bucketName).range(DATA_RETENTION_DAYS, ChronoUnit.DAYS), outletId);
+    }
+
+    /**
+     * Returns the total power used excluding standby by an outlet
+     * DOES NOT AUTHENTICATE THE USER - USE WITH CAUTION
+     * @param flux RangeFlux specifying the time range
+     * @param outletId the id of the outlet
+     * @return the total power used by the outlet in the given timeframe
+     */
+    private double getTotalPowerUsedFilteredByOutlet(RangeFlux flux, int outletId){
+        String totalPowerUsedQuery = flux
+                .filter(Restrictions
+                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId)))
+                        .and(Restrictions.field().equal("totalPowerUsed")))
+                .drop(new String[]{"_start", "_stop", "_field", "_measurement", "_time", "outletId"})
+                .last()
+                .toString();
+        QueryApi queryApi = influxDBClient.getQueryApi();
+        List<FluxTable> results = queryApi.query(totalPowerUsedQuery);
+
+        return calculateFilteredAverage(results,0.3); //every value below 30% of the MAX value in the table are standby
+    }
+
+    public static double calculateFilteredAverage(List<FluxTable> wattEntries, double deviationThreshold) {
+        double maxValue = wattEntries.stream().mapToDouble(v -> (double) v.getRecords().get(0).getValueByKey("_value"))
+                .max().getAsDouble();
+
+        return wattEntries.stream().mapToDouble(v -> (double) v.getRecords().get(0).getValueByKey("_value"))
+                .filter(value -> value > maxValue*deviationThreshold)
+                .average().getAsDouble();
     }
 }
