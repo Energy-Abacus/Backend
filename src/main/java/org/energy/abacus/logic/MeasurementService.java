@@ -107,14 +107,11 @@ public class MeasurementService {
     }
 
     public List<Data> getMeasurementsOfFriend(int outletId, long from, long to, String userId, String friendId){
-
         if(!friendshipService.isFriend(userId,friendId)){
-
             throw new NotAllowedException("The requested user is not your friend!");
         }
 
         return getMeasurementsByOutletInTimeFrame(outletId,from,to,friendId);
-
     }
 
 //    public double getAverageActivePowerUsedByOutlet(int outletId, String userId) {
