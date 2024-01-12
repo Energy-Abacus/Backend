@@ -252,15 +252,13 @@ public class MeasurementService {
      * @return the total power used by the outlet in the given timeframe
      */
     private double getTotalPowerUsedFilteredByOutlet(RangeFlux flux, int outletId){
-        String totalPowerUsedQuery = flux
+        String measurementsInTimeframeQuery = Flux.from(bucketName)
                 .filter(Restrictions
-                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId)))
-                        .and(Restrictions.field().equal("totalPowerUsed")))
-                .drop(new String[]{"_start", "_stop", "_field", "_measurement", "_time", "outletId"})
-                .last()
+                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
+                .pivot(new String[] { "_time" }, new String[] { "_field" }, "_value")
                 .toString();
         QueryApi queryApi = influxDBClient.getQueryApi();
-        List<FluxTable> results = queryApi.query(totalPowerUsedQuery);
+        List<FluxTable> results = queryApi.query(measurementsInTimeframeQuery);
 
         return calculateFilteredAverage(results,0.3); //every value below 30% of the MAX value in the table are standby
     }
