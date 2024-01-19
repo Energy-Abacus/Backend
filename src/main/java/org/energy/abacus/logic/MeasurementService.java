@@ -260,11 +260,19 @@ public class MeasurementService {
                 )
                 .mean("_value")
                 .toString();
+        log.log(Level.SEVERE, measurementsInTimeframeQuery);
         QueryApi queryApi = influxDBClient.getQueryApi();
         List<FluxTable> results = queryApi.query(measurementsInTimeframeQuery);
         return results.isEmpty() ? 0 : (double) results.get(0).getRecords().get(0).getValueByKey("_value");
     }
     
+    public double getEstimatedStandbyPower(int outletId, String userId) {
+        if (!outletService.outletBelongsToUser(outletId, userId)) {
+            throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
+        }
+        return getStandByPower(Flux.from(bucketName).range(DATA_RETENTION_DAYS, ChronoUnit.DAYS), outletId);
+    }
+
     public double getEstimatedStandbyPower(int outletId, String userId) {
         if (!outletService.outletBelongsToUser(outletId, userId)) {
             throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
