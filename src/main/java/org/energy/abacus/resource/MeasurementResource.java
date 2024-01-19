@@ -58,6 +58,13 @@ public class MeasurementResource {
     }
 
     @GET
+    @Path("/standby-power")
+    @Authenticated
+    public double getAvgStandbyPower(@QueryParam("outletId") int outletId) {
+        return measurementService.getEstimatedStandbyPower(outletId, this.userId);
+    }
+
+    @GET
     @Path("/filtered-avg-power-plug")
     @Authenticated
     public double getFilteredAvgPowerUsed(@QueryParam("outletId") int outletId) {
