@@ -254,21 +254,28 @@ public class MeasurementService {
     private double getTotalPowerUsedFilteredByOutlet(RangeFlux flux, int outletId){
         String measurementsInTimeframeQuery = flux
                 .filter(Restrictions
-                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
-                .pivot(new String[] { "_time" }, new String[] { "_field" }, "_value")
+                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId)))
+                        .and(Restrictions.field().equal("wattPower"))
+                        .and(Restrictions.measurement().greater(getStandByPower(flux, outletId)))
+                )
+                .mean("_value")
                 .toString();
         QueryApi queryApi = influxDBClient.getQueryApi();
-        List<Data> results = queryApi.query(measurementsInTimeframeQuery, Data.class);
-
-        return calculateFilteredAverage(results,0.3); //every value below 30% of the MAX value in the table are standby
+        List<FluxTable> results = queryApi.query(measurementsInTimeframeQuery);
+        return results.isEmpty() ? 0 : (double) results.get(0).getRecords().get(0).getValueByKey("_value");
     }
 
-    public static double calculateFilteredAverage(List<Data> wattEntries, double deviationThreshold) {
-        double maxValue = wattEntries.stream().mapToDouble(v -> v.getWattPower())
-                .max().getAsDouble();
-
-        return wattEntries.stream().mapToDouble(v -> (double) v.getWattPower())
-                .filter(value -> value > maxValue*deviationThreshold)
-                .average().getAsDouble();
+    private double getStandByPower(RangeFlux flux, int outletId) {
+        String measurementsInTimeframeQuery = flux
+                .filter(Restrictions
+                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId)))
+                        .and(Restrictions.field().equal("wattPower"))
+                )
+                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
+                .max()
+                .toString();
+        QueryApi queryApi = influxDBClient.getQueryApi();
+        List<FluxTable> results = queryApi.query(measurementsInTimeframeQuery);
+        return results.isEmpty() ? 0 : (((double) results.get(0).getRecords().get(0).getValueByKey("_value")) * 0.3);
     }
 }
