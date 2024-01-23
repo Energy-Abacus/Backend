@@ -256,7 +256,7 @@ public class MeasurementService {
                 .filter(Restrictions
                         .and(Restrictions.tag("outletId").equal(Integer.toString(outletId)))
                         .and(Restrictions.field().equal("wattPower"))
-                        .and(Restrictions.measurement().greater(Double.toString(getStandByPower(flux, outletId))))
+                        .and(Restrictions.value().greater(Double.toString(getStandByPower(flux, outletId))))
                 )
                 .mean("_value")
                 .toString();
