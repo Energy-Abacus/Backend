@@ -283,6 +283,7 @@ public class MeasurementService {
                 .max()
                 .toString();
         QueryApi queryApi = influxDBClient.getQueryApi();
+        log.log(Level.SEVERE, measurementsInTimeframeQuery);
         List<FluxTable> results = queryApi.query(measurementsInTimeframeQuery);
         return results.isEmpty() ? 0 : (((double) results.get(0).getRecords().get(0).getValueByKey("_value")) * 0.3);
     }
