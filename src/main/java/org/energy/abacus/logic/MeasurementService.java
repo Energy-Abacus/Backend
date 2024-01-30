@@ -18,6 +18,7 @@ import org.energy.abacus.entities.Data;
 import org.energy.abacus.entities.Hub;
 import org.energy.abacus.entities.Outlet;
 import org.jboss.resteasy.reactive.common.NotImplementedYet;
+import org.w3c.dom.ranges.Range;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -98,8 +99,7 @@ public class MeasurementService {
 
         String measurementsInTimeframeQuery = Flux.from(bucketName)
                 .range(Instant.ofEpochSecond(from), Instant.ofEpochSecond(to))
-                .filter(Restrictions
-                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
+                .filter(Restrictions.and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
                 .pivot(new String[] { "_time" }, new String[] { "_field" }, "_value")
                 .toString();
         QueryApi queryApi = influxDBClient.getQueryApi();
@@ -114,14 +114,13 @@ public class MeasurementService {
         return getMeasurementsByOutletInTimeFrame(outletId,from,to,friendId);
     }
 
-//    public double getAverageActivePowerUsedByOutlet(int outletId, String userId) {
-//        if (!outletService.outletBelongsToUser(outletId, userId)) {
-//            throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
-//        }
-//
-//        // https://community.influxdata.com/t/filter-data-glitches/11445
-//        throw new NotImplementedYet();
-//    }
+    public double getAverageActivePowerUsedByOutlet(int outletId, String userId) {
+        if (!outletService.outletBelongsToUser(outletId, userId)) {
+            throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
+        }
+
+        return getTotalPowerUsedFilteredByOutlet(outletId);
+    }
 
     public double getAveragePowerUsedByOutlet(int outletId, String userId) {
         if (!outletService.outletBelongsToUser(outletId, userId)) {
@@ -143,9 +142,8 @@ public class MeasurementService {
 
     private long countMeasurements(RangeFlux flux, int outletId, String field) {
         String countMeasurementsQuery = flux
-                .filter(Restrictions
-                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId)))
-                        .and(Restrictions.field().equal(field)))
+                .filter(Restrictions.and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
+                .filter(Restrictions.and(Restrictions.field().equal(field)))
                 .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
                 .count()
                 .toString();
@@ -200,9 +198,8 @@ public class MeasurementService {
      */
     private double  getTotalPowerUsedByOutlet(RangeFlux flux, int outletId) {
         String totalPowerUsedQuery = flux
-                .filter(Restrictions
-                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId)))
-                        .and(Restrictions.field().equal("totalPowerUsed")))
+                .filter(Restrictions.and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
+                .filter(Restrictions.and(Restrictions.field().equal("totalPowerUsed")))
                 .drop(new String[]{"_start", "_stop", "_field", "_measurement", "_time", "outletId"})
                 .last()
                 .toString();
@@ -242,5 +239,91 @@ public class MeasurementService {
         }
 
         return totalPowerUsed;
+    }
+
+    /**
+     * Returns the total power used excluding standby by an outlet
+     * DOES NOT AUTHENTICATE THE USER - USE WITH CAUTION
+     * @param outletId the id of the outlet
+     * @return the total power used by the outlet in the given timeframe
+     */
+    private double getTotalPowerUsedFilteredByOutlet(int outletId){
+        return this.getTotalPowerUsedFilteredByOutlet(Flux.from(bucketName).range(DATA_RETENTION_DAYS, ChronoUnit.DAYS), outletId);
+    }
+
+    /**
+     * Returns the total power used excluding standby by an outlet
+     * DOES NOT AUTHENTICATE THE USER - USE WITH CAUTION
+     * @param flux RangeFlux specifying the time range
+     * @param outletId the id of the outlet
+     * @return the total power used by the outlet in the given timeframe
+     */
+    private double getTotalPowerUsedFilteredByOutlet(RangeFlux flux, int outletId) {
+        /*
+        What it should look like
+        from(bucket:"measurement")
+	|> range(start:-1095d)
+    |> filter(fn: (r) => (r["outletId"] == "7"))
+    |> filter(fn: (r) => (r["_field"] == "wattPower"))
+    |> filter(fn: (r) => (r["_value"] > 2))
+    |> mean(column: "_value")
+    |> drop(columns:["_start", "_stop", "_field", "_measurement", "_time", "outletId"])
+
+    What it does look like
+    from(bucket:"measurement")
+	|> range(start:-1095d)
+	|> filter(fn: (r) => (r["_value"] > "46.428"))
+	|> mean(column:"_value")
+         */
+
+        // Tipp: use new .filter for every restriction
+
+        String measurementsInTimeframeQuery = flux
+                .filter(Restrictions.and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
+                .filter(Restrictions.and(Restrictions.field().equal("wattPower")))
+                .filter(Restrictions.and(Restrictions.value().greater(Double.toString(getStandByPower(flux, outletId)))))
+                .mean("_value")
+                .toString();
+        log.log(Level.SEVERE, measurementsInTimeframeQuery);
+        QueryApi queryApi = influxDBClient.getQueryApi();
+        List<FluxTable> results = queryApi.query(measurementsInTimeframeQuery);
+        return results.isEmpty() ? 0 : (double) results.get(0).getRecords().get(0).getValueByKey("_value");
+    }
+
+    public double getEstimatedStandbyPower(int outletId, String userId) {
+        if (!outletService.outletBelongsToUser(outletId, userId)) {
+            throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
+        }
+        return getStandByPower(Flux.from(bucketName).range(DATA_RETENTION_DAYS, ChronoUnit.DAYS), outletId);
+    }
+
+    private double getStandByPower(RangeFlux flux, int outletId) {
+        /*
+        What it should look like:
+        from(bucket:"measurement")
+	|> range(start:-1095d)
+	|> filter(fn: (r) => (r["_field"] == "wattPower"))
+    |> filter(fn: (r) => (r["outletId"] == "7"))
+	|> drop(columns:["_start", "_stop", "_field", "_measurement", "_time", "outletId"])
+	|> max()
+
+        What it does look like:
+         from(bucket:"measurement")
+	|> range(start:-1095d)
+	|> filter(fn: (r) => (r["_field"] == "wattPower"))
+	|> drop(columns:["_start", "_stop", "_field", "_measurement", "_time", "outletId"])
+	|> max()
+         */
+
+        String measurementsInTimeframeQuery = flux
+                .filter(Restrictions.and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
+                .filter(Restrictions.and(Restrictions.field().equal("wattPower")))
+                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
+                .max()
+                .toString();
+        QueryApi queryApi = influxDBClient.getQueryApi();
+        log.log(Level.SEVERE, measurementsInTimeframeQuery);
+        List<FluxTable> results = queryApi.query(measurementsInTimeframeQuery);
+        return results.isEmpty() ? 0 : (((double) results.get(0).getRecords().get(0).getValueByKey("_value")) * 0.3);
     }
 }

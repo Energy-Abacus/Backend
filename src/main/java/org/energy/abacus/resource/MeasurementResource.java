@@ -58,6 +58,20 @@ public class MeasurementResource {
     }
 
     @GET
+    @Path("/standby-power")
+    @Authenticated
+    public double getAvgStandbyPower(@QueryParam("outletId") int outletId) {
+        return measurementService.getEstimatedStandbyPower(outletId, this.userId);
+    }
+
+    @GET
+    @Path("/filtered-avg-power-plug")
+    @Authenticated
+    public double getFilteredAvgPowerUsed(@QueryParam("outletId") int outletId) {
+        return measurementService.getAverageActivePowerUsedByOutlet(outletId, this.userId);
+    }
+
+    @GET
     @Path("/avg-power-plug-between")
     @Authenticated
     public double getAvgPowerUsed(
@@ -74,6 +88,7 @@ public class MeasurementResource {
     public double getTotalPowerUsedByUser() {
         return measurementService.getTotalPowerUsedByUser(this.userId);
     }
+
 
     @GET
     @Authenticated
