@@ -4,6 +4,7 @@ import io.quarkus.security.Authenticated;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
+import org.energy.abacus.dtos.GetOutletDto;
 import org.energy.abacus.dtos.OutletDto;
 import org.energy.abacus.entities.Outlet;
 import org.energy.abacus.logic.OutletService;
@@ -39,7 +40,14 @@ public class OutletResource {
 
     @GET
     @Authenticated
-    public Collection<Outlet> getAllOutlets(@QueryParam("hubId") int hubId) {
+    public Collection<GetOutletDto> getAllOutlets(@QueryParam("loadMeasurements") @DefaultValue("true") boolean loadMeasurements) {
+        return outletService.getAllOutletsForUser(userId, loadMeasurements);
+    }
+
+    @GET
+    @Authenticated
+    @Path("by-hub-id")
+    public Collection<Outlet> getAllOutletsByHub(@QueryParam("hubId") int hubId) {
         return outletService.getAllOutletsForHub(hubId, userId);
     }
 

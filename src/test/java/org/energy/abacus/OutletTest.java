@@ -93,7 +93,7 @@ class OutletTest {
                 .then().statusCode(200).extract().body().as(Integer.class);
 
         Outlet[] outlet = given()
-                .get("/api/v1/outlet?hubId=" + hub.getId())
+                .get("/api/v1/outlet/by-hub-id?hubId=" + hub.getId())
                 .then()
                 .statusCode(200)
                 .extract().body().as(Outlet[].class);
