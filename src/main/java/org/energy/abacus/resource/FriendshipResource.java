@@ -4,6 +4,7 @@ import io.quarkus.security.Authenticated;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
 import org.energy.abacus.dtos.FriendshipReactionDto;
+import org.energy.abacus.dtos.LeaderBoarPositionDto;
 import org.energy.abacus.dtos.UserDto;
 import org.energy.abacus.dtos.UserFriendDto;
 import org.energy.abacus.entities.Friendship;
@@ -63,6 +64,13 @@ public class FriendshipResource {
     @Path("/friend-details")
     public Collection<UserFriendDto> getAllUserProfiles() {
         return service.getAllUserProfiles(userId);
+    }
+
+    @GET
+    @Authenticated
+    @Path("/leaderboard")
+    public Collection<LeaderBoarPositionDto> getLeaderboard() {
+        return service.getLeaderBoard(userId);
     }
 
     @GET

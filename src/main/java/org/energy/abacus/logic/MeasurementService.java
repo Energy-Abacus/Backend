@@ -41,6 +41,8 @@ public class MeasurementService {
     HubService hubService;
 
     @Inject
+    FriendshipService friendshipService;
+    @Inject
     OutletService outletService;
 
     private InfluxDBClient influxDBClient;
@@ -104,13 +106,21 @@ public class MeasurementService {
         return queryApi.query(measurementsInTimeframeQuery, Data.class);
     }
 
+    public List<Data> getMeasurementsOfFriend(int outletId, long from, long to, String userId, String friendId){
+        if(!friendshipService.isFriend(userId,friendId)){
+            throw new NotAllowedException("The requested user is not your friend!");
+        }
+
+        return getMeasurementsByOutletInTimeFrame(outletId,from,to,friendId);
+    }
+
     public double getAverageActivePowerUsedByOutlet(int outletId, String userId) {
         if (!outletService.outletBelongsToUser(outletId, userId)) {
             throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
         }
 
         return getTotalPowerUsedFilteredByOutlet(outletId);
-   }
+    }
 
     public double getAveragePowerUsedByOutlet(int outletId, String userId) {
         if (!outletService.outletBelongsToUser(outletId, userId)) {
