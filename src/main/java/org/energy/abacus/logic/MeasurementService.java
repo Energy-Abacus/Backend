@@ -233,6 +233,8 @@ public class MeasurementService {
                 .last()
                 .toString();
 
+        log.log(Level.SEVERE, totalPowerByUserQuery);
+
         double totalPowerUsed = 0;
         for (var result : queryApi.query(totalPowerByUserQuery)) {
             totalPowerUsed += (double) result.getRecords().get(0).getValueByKey("_value");
