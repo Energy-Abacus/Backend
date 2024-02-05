@@ -229,13 +229,17 @@ public class MeasurementService {
         String totalPowerByUserQuery = rangeFlux
                 .filter(Restrictions.and(Restrictions.column("_field").equal("totalPowerUsed")))
                 .filter(Restrictions.and(Restrictions.tag("outletId").contains(outletIds)))
-                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
+                .groupBy("outletId")
                 .last()
+                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
                 .toString();
 
         double totalPowerUsed = 0;
-        for (var result : queryApi.query(totalPowerByUserQuery)) {
-            totalPowerUsed += (double) result.getRecords().get(0).getValueByKey("_value");
+        for (var tables : queryApi.query(totalPowerByUserQuery)) {
+            for (var result : tables.getRecords()) {
+                log.log(Level.SEVERE, result.getValueByKey("_value").toString());
+                totalPowerUsed += (double) result.getValueByKey("_value");
+            }
         }
 
         return totalPowerUsed;
