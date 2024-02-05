@@ -234,19 +234,11 @@ public class MeasurementService {
                 .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
                 .toString();
 
-        List<FluxTable> resultTest = queryApi.query(totalPowerByUserQuery);
-        log.log(Level.SEVERE, resultTest.size() > 0 ? resultTest.get(0).toString() : "No results");
-        log.log(Level.SEVERE, resultTest.size() > 0 && resultTest.get(0).getRecords().size() > 0 ? resultTest.get(0).getRecords().get(0).toString() : "No records");
-        log.log(Level.SEVERE, "Values:");
-
         double totalPowerUsed = 0;
-
-        if (resultTest.size() > 0) {
-            for (var tables : queryApi.query(totalPowerByUserQuery)) {
-                for (var result : tables.getRecords()) {
-                    log.log(Level.SEVERE, result.getValueByKey("_value").toString());
-                    totalPowerUsed += (double) result.getValueByKey("_value");
-                }
+        for (var tables : queryApi.query(totalPowerByUserQuery)) {
+            for (var result : tables.getRecords()) {
+                log.log(Level.SEVERE, result.getValueByKey("_value").toString());
+                totalPowerUsed += (double) result.getValueByKey("_value");
             }
         }
 
