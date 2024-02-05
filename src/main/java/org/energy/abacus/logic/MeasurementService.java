@@ -229,8 +229,9 @@ public class MeasurementService {
         String totalPowerByUserQuery = rangeFlux
                 .filter(Restrictions.and(Restrictions.column("_field").equal("totalPowerUsed")))
                 .filter(Restrictions.and(Restrictions.tag("outletId").contains(outletIds)))
-                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
+                .groupBy("outletId")
                 .last()
+                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
                 .toString();
 
         log.log(Level.SEVERE, totalPowerByUserQuery);
