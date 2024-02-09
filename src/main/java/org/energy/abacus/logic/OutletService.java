@@ -1,6 +1,7 @@
 package org.energy.abacus.logic;
 
 import lombok.extern.java.Log;
+import org.energy.abacus.dtos.GetOutletDto;
 import org.energy.abacus.dtos.OutletDto;
 import org.energy.abacus.entities.Hub;
 import org.energy.abacus.entities.Outlet;
@@ -24,6 +25,8 @@ public class OutletService {
     HubService hubService;
     @Inject
     DeviceTypeService deviceTypeService;
+    @Inject
+    MeasurementService measurementService;
 
     public int addNewOutlet(final OutletDto outletDTO, String userId) {
         Hub hub = hubService.getHubById(outletDTO.getHubId(), userId);
@@ -91,5 +94,30 @@ public class OutletService {
         return entityManager.createNamedQuery("findOutletIdsByUser", Integer.class)
                 .setParameter("userId", userId)
                 .getResultList();
+    }
+
+    public Collection<GetOutletDto> getAllOutletsForUser(String userId, boolean loadMeasurementsData) {
+        return entityManager.createNamedQuery("findOutletsByUser", Outlet.class)
+                .setParameter("userId", userId)
+                .getResultList()
+                .stream().map(o -> mapOutletToGetOutletDto(o, userId, loadMeasurementsData))
+                .toList();
+    }
+
+    private GetOutletDto mapOutletToGetOutletDto(Outlet outlet, String userId, boolean loadMeasurementsData) {
+        GetOutletDto.GetOutletDtoBuilder builder = GetOutletDto.builder()
+                .id(outlet.getId())
+                .name(outlet.getName())
+                .outletIdentifier(outlet.getOutletIdentifier())
+                .hubId(outlet.getHub().getId())
+                .deviceTypes(outlet.getDeviceTypes())
+                .powerOn(outlet.isPowerOn());
+
+        if (loadMeasurementsData) {
+            builder = builder
+                    .totalPowerUsed(measurementService.getTotalPowerUsedByOutletWithUserId(outlet.getId(), userId))
+                    .avgPowerUsed(measurementService.getAveragePowerUsedByOutlet(outlet.getId(), userId));
+        }
+        return builder.build();
     }
 }

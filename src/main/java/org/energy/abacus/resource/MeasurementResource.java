@@ -58,6 +58,13 @@ public class MeasurementResource {
     }
 
     @GET
+    @Path("/standby-power")
+    @Authenticated
+    public double getAvgStandbyPower(@QueryParam("outletId") int outletId) {
+        return measurementService.getEstimatedStandbyPower(outletId, this.userId);
+    }
+
+    @GET
     @Path("/filtered-avg-power-plug")
     @Authenticated
     public double getFilteredAvgPowerUsed(@QueryParam("outletId") int outletId) {
@@ -115,11 +122,23 @@ public class MeasurementResource {
 
     @GET
     @Authenticated
-    public Collection<Data> getMeasurementsByOutletId(
+    public Collection<Data> getOutletMeasurements(
             @QueryParam("outletId") int outletId,
             @QueryParam("from") long from,
             @QueryParam("to") long to
     ) {
         return measurementService.getMeasurementsByOutletInTimeFrame(outletId, from, to, userId);
+    }
+
+    @GET
+    @Authenticated
+    @Path("/friend")
+    public Collection<Data> getOutletMeasurementsByFriend(
+            @QueryParam("friendId") String friendId,
+            @QueryParam("outletId") int outletId,
+            @QueryParam("from") long from,
+            @QueryParam("to") long to
+    ) {
+        return measurementService.getMeasurementsOfFriend(outletId, from, to, userId, friendId);
     }
 }

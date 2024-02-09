@@ -41,6 +41,8 @@ public class MeasurementService {
     HubService hubService;
 
     @Inject
+    FriendshipService friendshipService;
+    @Inject
     OutletService outletService;
 
     private InfluxDBClient influxDBClient;
@@ -97,12 +99,19 @@ public class MeasurementService {
 
         String measurementsInTimeframeQuery = Flux.from(bucketName)
                 .range(Instant.ofEpochSecond(from), Instant.ofEpochSecond(to))
-                .filter(Restrictions
-                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
+                .filter(Restrictions.and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
                 .pivot(new String[] { "_time" }, new String[] { "_field" }, "_value")
                 .toString();
         QueryApi queryApi = influxDBClient.getQueryApi();
         return queryApi.query(measurementsInTimeframeQuery, Data.class);
+    }
+
+    public List<Data> getMeasurementsOfFriend(int outletId, long from, long to, String userId, String friendId){
+        if(!friendshipService.isFriend(userId,friendId)){
+            throw new NotAllowedException("The requested user is not your friend!");
+        }
+
+        return getMeasurementsByOutletInTimeFrame(outletId,from,to,friendId);
     }
 
     public double getAverageActivePowerUsedByOutlet(int outletId, String userId) {
@@ -111,7 +120,7 @@ public class MeasurementService {
         }
 
         return getTotalPowerUsedFilteredByOutlet(outletId);
-   }
+    }
 
     public double getAveragePowerUsedByOutlet(int outletId, String userId) {
         if (!outletService.outletBelongsToUser(outletId, userId)) {
@@ -133,9 +142,8 @@ public class MeasurementService {
 
     private long countMeasurements(RangeFlux flux, int outletId, String field) {
         String countMeasurementsQuery = flux
-                .filter(Restrictions
-                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId)))
-                        .and(Restrictions.field().equal(field)))
+                .filter(Restrictions.and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
+                .filter(Restrictions.and(Restrictions.field().equal(field)))
                 .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
                 .count()
                 .toString();
@@ -190,9 +198,8 @@ public class MeasurementService {
      */
     private double  getTotalPowerUsedByOutlet(RangeFlux flux, int outletId) {
         String totalPowerUsedQuery = flux
-                .filter(Restrictions
-                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId)))
-                        .and(Restrictions.field().equal("totalPowerUsed")))
+                .filter(Restrictions.and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
+                .filter(Restrictions.and(Restrictions.field().equal("totalPowerUsed")))
                 .drop(new String[]{"_start", "_stop", "_field", "_measurement", "_time", "outletId"})
                 .last()
                 .toString();
@@ -222,13 +229,17 @@ public class MeasurementService {
         String totalPowerByUserQuery = rangeFlux
                 .filter(Restrictions.and(Restrictions.column("_field").equal("totalPowerUsed")))
                 .filter(Restrictions.and(Restrictions.tag("outletId").contains(outletIds)))
-                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
+                .groupBy("outletId")
                 .last()
+                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
                 .toString();
 
         double totalPowerUsed = 0;
-        for (var result : queryApi.query(totalPowerByUserQuery)) {
-            totalPowerUsed += (double) result.getRecords().get(0).getValueByKey("_value");
+        for (var tables : queryApi.query(totalPowerByUserQuery)) {
+            for (var result : tables.getRecords()) {
+                log.log(Level.SEVERE, result.getValueByKey("_value").toString());
+                totalPowerUsed += (double) result.getValueByKey("_value");
+            }
         }
 
         return totalPowerUsed;
@@ -251,26 +262,72 @@ public class MeasurementService {
      * @param outletId the id of the outlet
      * @return the total power used by the outlet in the given timeframe
      */
-    private double getTotalPowerUsedFilteredByOutlet(RangeFlux flux, int outletId){
-        String totalPowerUsedQuery = flux
-                .filter(Restrictions
-                        .and(Restrictions.tag("outletId").equal(Integer.toString(outletId)))
-                        .and(Restrictions.field().equal("totalPowerUsed")))
-                .drop(new String[]{"_start", "_stop", "_field", "_measurement", "_time", "outletId"})
-                .last()
-                .toString();
-        QueryApi queryApi = influxDBClient.getQueryApi();
-        List<FluxTable> results = queryApi.query(totalPowerUsedQuery);
+    private double getTotalPowerUsedFilteredByOutlet(RangeFlux flux, int outletId) {
+        /*
+        What it should look like
+        from(bucket:"measurement")
+	|> range(start:-1095d)
+    |> filter(fn: (r) => (r["outletId"] == "7"))
+    |> filter(fn: (r) => (r["_field"] == "wattPower"))
+    |> filter(fn: (r) => (r["_value"] > 2))
+    |> mean(column: "_value")
+    |> drop(columns:["_start", "_stop", "_field", "_measurement", "_time", "outletId"])
 
-        return calculateFilteredAverage(results,0.3); //every value below 30% of the MAX value in the table are standby
+    What it does look like
+    from(bucket:"measurement")
+	|> range(start:-1095d)
+	|> filter(fn: (r) => (r["_value"] > "46.428"))
+	|> mean(column:"_value")
+         */
+
+        // Tipp: use new .filter for every restriction
+
+        String measurementsInTimeframeQuery = flux
+                .filter(Restrictions.and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
+                .filter(Restrictions.and(Restrictions.field().equal("wattPower")))
+                .filter(Restrictions.and(Restrictions.value().greater(Double.toString(getStandByPower(flux, outletId)))))
+                .mean("_value")
+                .toString();
+        log.log(Level.SEVERE, measurementsInTimeframeQuery);
+        QueryApi queryApi = influxDBClient.getQueryApi();
+        List<FluxTable> results = queryApi.query(measurementsInTimeframeQuery);
+        return results.isEmpty() ? 0 : (double) results.get(0).getRecords().get(0).getValueByKey("_value");
     }
 
-    public static double calculateFilteredAverage(List<FluxTable> wattEntries, double deviationThreshold) {
-        double maxValue = wattEntries.stream().mapToDouble(v -> (double) v.getRecords().get(0).getValueByKey("_value"))
-                .max().getAsDouble();
+    public double getEstimatedStandbyPower(int outletId, String userId) {
+        if (!outletService.outletBelongsToUser(outletId, userId)) {
+            throw new NotAllowedException("Outlet doesn't exist or you don't have access to it!");
+        }
+        return getStandByPower(Flux.from(bucketName).range(DATA_RETENTION_DAYS, ChronoUnit.DAYS), outletId);
+    }
 
-        return wattEntries.stream().mapToDouble(v -> (double) v.getRecords().get(0).getValueByKey("_value"))
-                .filter(value -> value > maxValue*deviationThreshold)
-                .average().getAsDouble();
+    private double getStandByPower(RangeFlux flux, int outletId) {
+        /*
+        What it should look like:
+        from(bucket:"measurement")
+	|> range(start:-1095d)
+	|> filter(fn: (r) => (r["_field"] == "wattPower"))
+    |> filter(fn: (r) => (r["outletId"] == "7"))
+	|> drop(columns:["_start", "_stop", "_field", "_measurement", "_time", "outletId"])
+	|> max()
+
+        What it does look like:
+         from(bucket:"measurement")
+	|> range(start:-1095d)
+	|> filter(fn: (r) => (r["_field"] == "wattPower"))
+	|> drop(columns:["_start", "_stop", "_field", "_measurement", "_time", "outletId"])
+	|> max()
+         */
+
+        String measurementsInTimeframeQuery = flux
+                .filter(Restrictions.and(Restrictions.tag("outletId").equal(Integer.toString(outletId))))
+                .filter(Restrictions.and(Restrictions.field().equal("wattPower")))
+                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
+                .max()
+                .toString();
+        QueryApi queryApi = influxDBClient.getQueryApi();
+        log.log(Level.SEVERE, measurementsInTimeframeQuery);
+        List<FluxTable> results = queryApi.query(measurementsInTimeframeQuery);
+        return results.isEmpty() ? 0 : (((double) results.get(0).getRecords().get(0).getValueByKey("_value")) * 0.3);
     }
 }
