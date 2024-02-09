@@ -20,4 +20,6 @@ public class DeviceTypeResource {
     @GET
     public Collection<DeviceType> getAll(){return service.getDeviceTypeList();}
 
+    //Can we already assign a device type to a device?
+
 }

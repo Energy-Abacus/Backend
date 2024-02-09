@@ -82,6 +82,26 @@ public class MeasurementResource {
         return measurementService.getTotalPowerUsedByUser(this.userId);
     }
 
+    //getTotalPowerUsedByDeviceType
+    // @param deviceTypeId
+    // @param userId
+
+    //getTotalPowerUsedByDeviceTypeBetween
+    // @param deviceTypeId
+    // @param userId
+    // @param from
+    // @param to
+
+
+    //getDeviceTypeLeaderboard (Local Leaderboard for userId with all outlets from device-type id)
+    // @param userId
+    // @param deviceTypeId
+
+    //getMeasurementsByDeviceType
+    // @param deviceTypeId
+    // @param userId
+    // @param from
+    // @param to
 
     @GET
     @Authenticated
