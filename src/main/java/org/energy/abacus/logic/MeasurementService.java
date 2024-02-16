@@ -13,6 +13,7 @@ import com.influxdb.query.dsl.functions.restriction.Restrictions;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.energy.abacus.dtos.GetTotalPowerUsedDto;
+import org.energy.abacus.dtos.LeaderBoarPositionDto;
 import org.energy.abacus.dtos.MeasurementDto;
 import org.energy.abacus.entities.Data;
 import org.energy.abacus.entities.Hub;
@@ -27,6 +28,7 @@ import javax.persistence.EntityManager;
 import javax.ws.rs.NotAllowedException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -329,5 +331,58 @@ public class MeasurementService {
         log.log(Level.SEVERE, measurementsInTimeframeQuery);
         List<FluxTable> results = queryApi.query(measurementsInTimeframeQuery);
         return results.isEmpty() ? 0 : (((double) results.get(0).getRecords().get(0).getValueByKey("_value")) * 0.3);
+    }
+
+    public double getAveragePowerUsedByDeviceType(int deviceTypeId, String userId) {
+        double totalPowerUsed = this.getTotalPowerUsedByDeviceType(Flux.from(bucketName).range(DATA_RETENTION_DAYS, ChronoUnit.DAYS), deviceTypeId, userId);
+        List<String> outletIds = outletService.getOutletsByUserAndDeviceType(deviceTypeId, userId).stream().map(String::valueOf).toList();
+        double totalMeasurements = 0;
+
+        for (String outletId : outletIds) {
+            totalMeasurements += countMeasurements(Flux.from(bucketName).range(DATA_RETENTION_DAYS, ChronoUnit.DAYS), Integer.parseInt(outletId), "totalPowerUsed");
+        }
+
+        return totalPowerUsed / totalMeasurements;
+    }
+
+    public double getTotalPowerUsedByDeviceType(int deviceTypeId, String userId) {
+        return this.getTotalPowerUsedByDeviceType(Flux.from(bucketName).range(DATA_RETENTION_DAYS, ChronoUnit.DAYS), deviceTypeId, userId);
+    }
+
+    public double getTotalPowerUsedByDeviceType(RangeFlux rangeFlux,int deviceTypeId, String userId) {
+        QueryApi queryApi = influxDBClient.getQueryApi();
+        String[] outletIds = outletService.getOutletsByUserAndDeviceType(deviceTypeId,userId).stream().map(String::valueOf).toArray(String[]::new);
+
+        String totalPowerByUserQuery = rangeFlux
+                .filter(Restrictions.and(Restrictions.column("_field").equal("totalPowerUsed")))
+                .filter(Restrictions.and(Restrictions.tag("outletId").contains(outletIds)))
+                .groupBy("outletId")
+                .last()
+                .drop(new String[] { "_start", "_stop", "_field", "_measurement", "_time", "outletId" })
+                .toString();
+
+        double totalPowerUsed = 0;
+        for (var tables : queryApi.query(totalPowerByUserQuery)) {
+            for (var result : tables.getRecords()) {
+                log.log(Level.SEVERE, result.getValueByKey("_value").toString());
+                totalPowerUsed += (double) result.getValueByKey("_value");
+            }
+        }
+
+        return totalPowerUsed;
+    }
+
+    public double getTotalPowerUsedByDeviceTypeBetween(int deviceTypeId, String userId, long from, long to) {
+        double totalPowerStart = this.getTotalPowerUsedByDeviceType(Flux.from(bucketName).range(
+                Instant.now().minus(DATA_RETENTION_DAYS, ChronoUnit.DAYS), Instant.ofEpochSecond(from)
+        ),deviceTypeId, userId);
+        double totalPowerEnd = this.getTotalPowerUsedByDeviceType(Flux.from(bucketName).range(
+                Instant.now().minus(DATA_RETENTION_DAYS, ChronoUnit.DAYS), Instant.ofEpochSecond(to)
+        ),deviceTypeId, userId);
+        return totalPowerEnd - totalPowerStart;
+    }
+    public Collection<LeaderBoarPositionDto> getDeviceTypeLeaderboard(int deviceTypeId, String userId) {
+        //TODO: Implement
+        return null;
     }
 }

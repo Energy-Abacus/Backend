@@ -5,6 +5,7 @@ import lombok.extern.java.Log;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
 import org.energy.abacus.dtos.GetTotalPowerUsedDto;
+import org.energy.abacus.dtos.LeaderBoarPositionDto;
 import org.energy.abacus.dtos.MeasurementDto;
 import org.energy.abacus.entities.Data;
 import org.energy.abacus.logic.MeasurementService;
@@ -89,26 +90,43 @@ public class MeasurementResource {
         return measurementService.getTotalPowerUsedByUser(this.userId);
     }
 
-    //getTotalPowerUsedByDeviceType
-    // @param deviceTypeId
-    // @param userId
+    @GET
+    @Authenticated
+    @Path("/total-power-device-type")
+    public double getTotalPowerUsedByDeviceType(
+            @QueryParam("deviceTypeId") int deviceTypeId
+    ) {
+        return measurementService.getTotalPowerUsedByDeviceType(deviceTypeId, this.userId);
+    }
 
-    //getTotalPowerUsedByDeviceTypeBetween
-    // @param deviceTypeId
-    // @param userId
-    // @param from
-    // @param to
+    @GET
+    @Authenticated
+    @Path("/total-power-device-type-between")
+    public double getTotalPowerUsedByDeviceTypeBetween(
+            @QueryParam("deviceTypeId") int deviceTypeId,
+            @QueryParam("from") long from,
+            @QueryParam("to") long to
+    ) {
+        return measurementService.getTotalPowerUsedByDeviceTypeBetween(deviceTypeId, this.userId, from, to);
+    }
 
+    @GET
+    @Authenticated
+    @Path("/device-type-leaderboard")
+    public Collection<LeaderBoarPositionDto> getDeviceTypeLeaderboard(
+            @QueryParam("deviceTypeId") int deviceTypeId
+    ) {
+        return measurementService.getDeviceTypeLeaderboard(deviceTypeId, this.userId);
+    }
 
-    //getDeviceTypeLeaderboard (Local Leaderboard for userId with all outlets from device-type id)
-    // @param userId
-    // @param deviceTypeId
-
-    //getMeasurementsByDeviceType
-    // @param deviceTypeId
-    // @param userId
-    // @param from
-    // @param to
+    @GET
+    @Authenticated
+    @Path("/avg-power-device-type")
+    public double getAvgPowerUsedByDeviceType(
+            @QueryParam("deviceTypeId") int deviceTypeId
+    ) {
+        return measurementService.getAveragePowerUsedByDeviceType(deviceTypeId, this.userId);
+    }
 
     @GET
     @Authenticated

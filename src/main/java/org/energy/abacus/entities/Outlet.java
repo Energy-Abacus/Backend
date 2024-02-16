@@ -17,6 +17,7 @@ import java.util.List;
 @NamedQuery(name = "findOutletByIdAndUser", query = "SELECT o FROM Outlet o WHERE o.id = :outletId AND o.hub.userid = :userId")
 @NamedQuery(name = "findOutletIdsByUser", query = "SELECT o.id FROM Outlet o WHERE o.hub.userid = :userId")
 @NamedQuery(name = "findOutletsByUser", query = "SELECT o FROM Outlet o WHERE o.hub.userid = :userId")
+@NamedQuery(name = "findOutletIdsByUserAndDeviceType", query = "SELECT o.id FROM Outlet o JOIN o.deviceTypes dt WHERE o.hub.userid = :userId AND dt.id = :deviceTypeId")
 public class Outlet {
 
     //Fields

@@ -104,6 +104,13 @@ public class OutletService {
                 .toList();
     }
 
+    public List<Integer> getOutletsByUserAndDeviceType(int deviceTypeId, String userId) {
+        return entityManager.createNamedQuery("findOutletIdsByUserAndDeviceType", Integer.class)
+                .setParameter("userId", userId)
+                .setParameter("deviceTypeId", deviceTypeId)
+                .getResultList();
+    }
+
     private GetOutletDto mapOutletToGetOutletDto(Outlet outlet, String userId, boolean loadMeasurementsData) {
         GetOutletDto.GetOutletDtoBuilder builder = GetOutletDto.builder()
                 .id(outlet.getId())

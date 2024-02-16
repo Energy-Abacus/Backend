@@ -25,15 +25,4 @@ public class DeviceTypeService {
                 .setParameter("ids", deviceTypeIds)
                 .getResultList();
     }
-
-    public int connectDeviceTypeToOutlet(int deviceTypeId, int outletId) {
-        DeviceType deviceType = entityManager.find(DeviceType.class, deviceTypeId);
-        if(deviceType == null){
-            throw new IllegalArgumentException("Device type with id " + deviceTypeId + " does not exist");
-        }
-        var outlet = entityManager.find(Outlet.class, outletId);
-        outlet.getDeviceTypes().add(deviceType);
-        deviceType.getOutlets().add(outlet);
-        return deviceType.getId();
-    }
 }
