@@ -360,9 +360,9 @@ public class MeasurementService {
                 .range(Instant.ofEpochSecond(end), Instant.ofEpochSecond(start))
                 .filter(Restrictions.and(Restrictions.column("_field").equal("wattPower")))
                 .filter(Restrictions.and(Restrictions.tag("outletId").contains(outletIds)))
-                .aggregateWindow().withColumn("_value").withEvery(15L, ChronoUnit.MINUTES).withFunction("mean")
+                .expression("aggregateWindow(every: 15m, fn: mean, column: \"_value\")")
                 .pivot(new String[] { "_time" }, new String[] { "outletId" }, "_value")
-                .map(String.format("{ _time: r[\"_time\"], _value: (%s) }", addPlugValuesBuilder.toString()))
+                .map(String.format("({ _time: r[\"_time\"], _value: (%s) })", addPlugValuesBuilder.toString()))
                 .toString();
 
         QueryApi queryApi = influxDBClient.getQueryApi();
@@ -384,9 +384,9 @@ public class MeasurementService {
                 .range(Instant.ofEpochSecond(end), Instant.ofEpochSecond(start))
                 .filter(Restrictions.and(Restrictions.column("_field").equal("totalPowerUsed")))
                 .filter(Restrictions.and(Restrictions.tag("outletId").contains(outletIds)))
-                .aggregateWindow().withColumn("_value").withEvery(15L, ChronoUnit.MINUTES).withFunction("last")
+                .expression("aggregateWindow(every: 15m, fn: mean, column: \"_value\")")
                 .pivot(new String[] { "_time" }, new String[] { "outletId" }, "_value")
-                .map(String.format("{ _time: r[\"_time\"], _value: (%s) }", addPlugValuesBuilder.toString()))
+                .map(String.format("({ _time: r[\"_time\"], _value: (%s) })", addPlugValuesBuilder.toString()))
                 .toString();
 
         QueryApi queryApi = influxDBClient.getQueryApi();
