@@ -357,7 +357,7 @@ public class MeasurementService {
         addPlugValuesBuilder.delete(addPlugValuesBuilder.length() - 3, addPlugValuesBuilder.length());
 
         String totalPowerByUserQuery = Flux.from(bucketName)
-                .range(Instant.ofEpochSecond(end), Instant.ofEpochSecond(start))
+                .range(Instant.ofEpochSecond(start), Instant.ofEpochSecond(end))
                 .filter(Restrictions.and(Restrictions.column("_field").equal("wattPower")))
                 .filter(Restrictions.and(Restrictions.tag("outletId").contains(outletIds)))
                 .expression("aggregateWindow(every: 15m, fn: mean, column: \"_value\")")
@@ -381,7 +381,7 @@ public class MeasurementService {
         addPlugValuesBuilder.delete(addPlugValuesBuilder.length() - 3, addPlugValuesBuilder.length());
 
         String totalPowerByUserQuery = Flux.from(bucketName)
-                .range(Instant.ofEpochSecond(end), Instant.ofEpochSecond(start))
+                .range(Instant.ofEpochSecond(start), Instant.ofEpochSecond(end))
                 .filter(Restrictions.and(Restrictions.column("_field").equal("totalPowerUsed")))
                 .filter(Restrictions.and(Restrictions.tag("outletId").contains(outletIds)))
                 .expression("aggregateWindow(every: 15m, fn: mean, column: \"_value\")")
