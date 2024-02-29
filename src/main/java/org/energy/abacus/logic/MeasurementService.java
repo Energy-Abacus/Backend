@@ -386,7 +386,7 @@ public class MeasurementService {
                 .filter(Restrictions.and(Restrictions.tag("outletId").contains(outletIds)))
                 .expression("aggregateWindow(every: 15m, fn: mean, column: \"_value\")")
                 .pivot(new String[] { "_time" }, new String[] { "outletId" }, "_value")
-                .map(String.format("({ _time: r[\"_time\"], _value: (%s) })", addPlugValuesBuilder.toString()))
+                .map(String.format("({ _time: r[\"_time\"], _totalPowerUsedSum: (%s) })", addPlugValuesBuilder.toString()))
                 .toString();
 
         QueryApi queryApi = influxDBClient.getQueryApi();

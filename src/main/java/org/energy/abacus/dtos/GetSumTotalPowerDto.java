@@ -12,6 +12,6 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GetSumTotalPowerDto {
-    private Instant timeStamp;
+    private Instant time;
     private double totalPowerUsedSum;
 }
