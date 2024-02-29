@@ -12,6 +12,8 @@ import com.influxdb.query.dsl.functions.RangeFlux;
 import com.influxdb.query.dsl.functions.restriction.Restrictions;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.energy.abacus.dtos.GetSumTotalPowerDto;
+import org.energy.abacus.dtos.GetSumWattDto;
 import org.energy.abacus.dtos.GetTotalPowerUsedDto;
 import org.energy.abacus.dtos.MeasurementDto;
 import org.energy.abacus.entities.Data;
@@ -329,5 +331,66 @@ public class MeasurementService {
         log.log(Level.SEVERE, measurementsInTimeframeQuery);
         List<FluxTable> results = queryApi.query(measurementsInTimeframeQuery);
         return results.isEmpty() ? 0 : (((double) results.get(0).getRecords().get(0).getValueByKey("_value")) * 0.3);
+    }
+
+    public List<GetSumWattDto> getSumWattByUser(long start, long end, String userId) {
+        String[] outletIds = outletService.getOutletIdsByUser(userId).stream().map(String::valueOf).toArray(String[]::new);
+
+        /*
+        from(bucket: "measurement")
+          |> range(start: -100d, stop: -99d)
+          |> filter(fn: (r) => (r["_field"] == "totalPowerUsed"))
+          |> filter(fn: (r) => (contains(value: r["outletId"], set:["11", "12"])))
+          |> aggregateWindow(every: 15m, fn: mean, column: "_value")
+          |> pivot(rowKey: ["_time"], columnKey: ["outletId"], valueColumn: "_value")
+          |> map(fn: (r) => ({
+            _time: r["_time"],
+            _value: (if exists r["11"] then r["11"] else 0.0) + (if exists r["12"] then r["12"] else 0.0)
+            }))
+         */
+
+        StringBuilder addPlugValuesBuilder = new StringBuilder();
+
+        for (String outletId : outletIds) {
+            addPlugValuesBuilder.append("(if exists r[\"").append(outletId).append("\"] then r[\"").append(outletId).append("\"] else 0.0) + ");
+        }
+        addPlugValuesBuilder.delete(addPlugValuesBuilder.length() - 3, addPlugValuesBuilder.length());
+
+        String totalPowerByUserQuery = Flux.from(bucketName)
+                .range(Instant.ofEpochSecond(end), Instant.ofEpochSecond(start))
+                .filter(Restrictions.and(Restrictions.column("_field").equal("wattPower")))
+                .filter(Restrictions.and(Restrictions.tag("outletId").contains(outletIds)))
+                .aggregateWindow().withColumn("_value").withEvery(15L, ChronoUnit.MINUTES).withFunction("mean")
+                .pivot(new String[] { "_time" }, new String[] { "outletId" }, "_value")
+                .map(String.format("{ _time: r[\"_time\"], _value: (%s) }", addPlugValuesBuilder.toString()))
+                .toString();
+
+        QueryApi queryApi = influxDBClient.getQueryApi();
+        log.log(Level.SEVERE, totalPowerByUserQuery);
+        return queryApi.query(totalPowerByUserQuery, GetSumWattDto.class);
+    }
+
+    public List<GetSumTotalPowerDto> getSumTotalPower(long start, long end, String userId) {
+        String[] outletIds = outletService.getOutletIdsByUser(userId).stream().map(String::valueOf).toArray(String[]::new);
+
+        StringBuilder addPlugValuesBuilder = new StringBuilder();
+
+        for (String outletId : outletIds) {
+            addPlugValuesBuilder.append("(if exists r[\"").append(outletId).append("\"] then r[\"").append(outletId).append("\"] else 0.0) + ");
+        }
+        addPlugValuesBuilder.delete(addPlugValuesBuilder.length() - 3, addPlugValuesBuilder.length());
+
+        String totalPowerByUserQuery = Flux.from(bucketName)
+                .range(Instant.ofEpochSecond(end), Instant.ofEpochSecond(start))
+                .filter(Restrictions.and(Restrictions.column("_field").equal("totalPowerUsed")))
+                .filter(Restrictions.and(Restrictions.tag("outletId").contains(outletIds)))
+                .aggregateWindow().withColumn("_value").withEvery(15L, ChronoUnit.MINUTES).withFunction("last")
+                .pivot(new String[] { "_time" }, new String[] { "outletId" }, "_value")
+                .map(String.format("{ _time: r[\"_time\"], _value: (%s) }", addPlugValuesBuilder.toString()))
+                .toString();
+
+        QueryApi queryApi = influxDBClient.getQueryApi();
+        log.log(Level.SEVERE, totalPowerByUserQuery);
+        return queryApi.query(totalPowerByUserQuery, GetSumTotalPowerDto.class);
     }
 }
