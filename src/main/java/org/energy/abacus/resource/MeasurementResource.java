@@ -4,6 +4,8 @@ import io.quarkus.security.Authenticated;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
+import org.energy.abacus.dtos.GetSumTotalPowerDto;
+import org.energy.abacus.dtos.GetSumWattDto;
 import org.energy.abacus.dtos.GetTotalPowerUsedDto;
 import org.energy.abacus.dtos.MeasurementDto;
 import org.energy.abacus.entities.Data;
@@ -120,5 +122,25 @@ public class MeasurementResource {
             @QueryParam("to") long to
     ) {
         return measurementService.getMeasurementsOfFriend(outletId, from, to, userId, friendId);
+    }
+
+    @GET
+    @Authenticated
+    @Path("/sum-watt")
+    public Collection<GetSumWattDto> getSumWatt(
+        @QueryParam("from") long from,
+        @QueryParam("to") long to
+    ) {
+        return measurementService.getSumWattByUser(from, to, userId);
+    }
+
+    @GET
+    @Authenticated
+    @Path("/sum-power")
+    public Collection<GetSumTotalPowerDto> getSumPower(
+            @QueryParam("from") long from,
+            @QueryParam("to") long to
+    ) {
+        return measurementService.getSumTotalPower(from, to, userId);
     }
 }
