@@ -228,7 +228,7 @@ public class FriendshipService {
             throw new NotAllowedException("User is not a friend");
         }
 
-        Instant toDate = LocalDateTime.parse("2024/02/03 00:00:00", DateTimeFormatter.ofPattern("yyyy/dd/MM HH:mm:ss")).atZone(ZoneId.systemDefault()).toInstant();
+        Instant toDate = LocalDateTime.parse("2024/02/03 00:00:00", DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")).atZone(ZoneId.systemDefault()).toInstant();
 
         return FriendInfoDto.builder()
                 .rank(getLeaderBoard(userId).stream()
@@ -236,7 +236,7 @@ public class FriendshipService {
                         .map(UserDto::getUser_id)
                         .toList()
                         .indexOf(friendId) + 1)
-                .lastDayConsumption(measurementService.getTotalPowerUsedByUserBetween(toDate.minusSeconds(86400).getEpochSecond(), toDate.getEpochSecond(), friendId))
+//                .lastDayConsumption(measurementService.getTotalPowerUsedByUserBetween(toDate.minusSeconds(86400).getEpochSecond(), toDate.getEpochSecond(), friendId))
                 .totalConsumption(measurementService.getTotalPowerUsedByUser(friendId))
                 .deviceTypes(outletService.getOutletsAndDeviceTypesByUser(friendId))
                 .build();
