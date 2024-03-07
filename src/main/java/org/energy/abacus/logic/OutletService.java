@@ -1,8 +1,10 @@
 package org.energy.abacus.logic;
 
 import lombok.extern.java.Log;
+import org.energy.abacus.dtos.DeviceTypePlugIdDto;
 import org.energy.abacus.dtos.GetOutletDto;
 import org.energy.abacus.dtos.OutletDto;
+import org.energy.abacus.entities.DeviceType;
 import org.energy.abacus.entities.Hub;
 import org.energy.abacus.entities.Outlet;
 
@@ -13,6 +15,7 @@ import javax.transaction.Transactional;
 import javax.ws.rs.NotAllowedException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 @Log
@@ -119,5 +122,13 @@ public class OutletService {
                     .avgPowerUsed(measurementService.getAveragePowerUsedByOutlet(outlet.getId(), userId));
         }
         return builder.build();
+    }
+
+    public List<DeviceTypePlugIdDto> getOutletsAndDeviceTypesByUser(String friendId) {
+        return entityManager.createNamedQuery("findOutletsByUser", Outlet.class)
+                .setParameter("userId", friendId)
+                .getResultList()
+                .stream().map(o -> new DeviceTypePlugIdDto(o.getDeviceTypes().get(0), o.getId()))
+                .toList();
     }
 }

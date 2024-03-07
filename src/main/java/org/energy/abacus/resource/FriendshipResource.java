@@ -3,10 +3,7 @@ package org.energy.abacus.resource;
 import io.quarkus.security.Authenticated;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
-import org.energy.abacus.dtos.FriendshipReactionDto;
-import org.energy.abacus.dtos.LeaderBoarPositionDto;
-import org.energy.abacus.dtos.UserDto;
-import org.energy.abacus.dtos.UserFriendDto;
+import org.energy.abacus.dtos.*;
 import org.energy.abacus.entities.Friendship;
 import org.energy.abacus.logic.FriendshipService;
 
@@ -78,5 +75,13 @@ public class FriendshipResource {
     @Authenticated
     public Collection<UserDto> searchByUserName(@QueryParam("username") String username) {
         return service.getAllUsersByName(username);
+    }
+
+    @GET
+    @Authenticated
+    @Transactional
+    @Path("/friend-info")
+    public FriendInfoDto getFriendInfo(@QueryParam("friendId") String friendId) {
+        return service.getFriendInfo(userId, friendId);
     }
 }

@@ -2,13 +2,12 @@ package org.energy.abacus.logic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.quarkus.security.UnauthorizedException;
 import lombok.extern.java.Log;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.energy.abacus.dtos.FriendshipReactionDto;
-import org.energy.abacus.dtos.LeaderBoarPositionDto;
-import org.energy.abacus.dtos.UserDto;
-import org.energy.abacus.dtos.UserFriendDto;
+import org.energy.abacus.dtos.*;
 import org.energy.abacus.entities.Friendship;
+import org.energy.abacus.entities.Outlet;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -17,6 +16,7 @@ import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotAllowedException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -25,6 +25,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -41,6 +44,9 @@ public class FriendshipService {
 
     @Inject
     MeasurementService measurementService;
+
+    @Inject
+    OutletService outletService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -215,6 +221,25 @@ public class FriendshipService {
                             .build())
                 .sorted(Comparator.comparingDouble(LeaderBoarPositionDto::getPowerUsed))
                 .toList();
+    }
+
+    public FriendInfoDto getFriendInfo(String userId, String friendId){
+        if (!isFriend(userId, friendId) && !userId.equals(friendId)) {
+            throw new NotAllowedException("User is not a friend");
+        }
+
+        Instant toDate = LocalDateTime.parse("2024/02/03 00:00:00", DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")).atZone(ZoneId.systemDefault()).toInstant();
+
+        return FriendInfoDto.builder()
+                .rank(getLeaderBoard(userId).stream()
+                        .map(LeaderBoarPositionDto::getUser)
+                        .map(UserDto::getUser_id)
+                        .toList()
+                        .indexOf(friendId) + 1)
+                .lastDayConsumption(measurementService.getTotalPowerUsedByUserBetween(toDate.minusSeconds(86400).getEpochSecond(), toDate.getEpochSecond(), friendId))
+                .totalConsumption(measurementService.getTotalPowerUsedByUser(friendId))
+                .deviceTypes(outletService.getOutletsAndDeviceTypesByUser(friendId))
+                .build();
     }
 
     public boolean isFriend(String id, String friendId){
