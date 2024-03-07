@@ -9,6 +9,6 @@ import org.energy.abacus.entities.DeviceType;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DeviceTypePlugIdDto {
-    private DeviceType deviceType;
+    private String deviceType;
     private int plugId;
 }

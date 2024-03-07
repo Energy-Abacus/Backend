@@ -128,7 +128,7 @@ public class OutletService {
         return entityManager.createNamedQuery("findOutletsByUser", Outlet.class)
                 .setParameter("userId", friendId)
                 .getResultList()
-                .stream().map(o -> new DeviceTypePlugIdDto(o.getDeviceTypes().size() > 0 ? o.getDeviceTypes().get(0) : DeviceType.builder().name("none").build(), o.getId()))
+                .stream().map(o -> new DeviceTypePlugIdDto(o.getDeviceTypes().size() > 0 ? o.getDeviceTypes().get(0).getName() : "none", o.getId()))
                 .toList();
     }
 }
